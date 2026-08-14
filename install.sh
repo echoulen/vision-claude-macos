@@ -26,8 +26,32 @@ info() { printf '\033[1;34m==>\033[0m %s\n' "$1"; }
 ok()   { printf '\033[1;32m ✓\033[0m %s\n' "$1"; }
 die()  { printf '\033[1;31m ✗\033[0m %s\n' "$1" >&2; exit 1; }
 
+port_in_use() {
+  lsof -nP -iTCP:"$1" -sTCP:LISTEN -t 2>/dev/null
+}
+
+# `launchctl bootout` 回來時 process 不保證已經退出：server 收到 SIGTERM 會先去收掉每個
+# session 的常駐 claude process group（它們是 detached 的，不收會變孤兒），那需要時間。
+# 沒等它把 port 放掉就往下走，後面的 port 檢查會把「還在收尾的自己」誤判成「被別的服務
+# 佔用」而中止安裝——正在跑 session 的機器最容易踩到。
 stop_service() {
   launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
+  local port="${1:-}"
+  [ -n "$port" ] || return 0
+  for _ in $(seq 1 30); do
+    [ -z "$(port_in_use "$port")" ] && return 0
+    sleep 0.5
+  done
+  return 0   # 等不到就交給後面的 port 檢查去報告，那裡的訊息更具體
+}
+
+# 既有設定的 port（要在停服務前就知道，才等得到正確的 port 被放掉）。$1 = node 執行檔。
+read_configured_port() {
+  "$1" -e '
+    const fs = require("fs");
+    try { console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).port ?? 8790); }
+    catch { console.log(8790); }
+  ' "$CONFIG"
 }
 
 uninstall() {
@@ -68,8 +92,11 @@ tar -xzf "$TMP/$TARBALL_NAME" -C "$TMP" || die "解壓失敗，檔案可能不�
 [ -x "$TMP/vision-claude-server/VisionClaudeServer" ] || die "發佈包內容不符預期。"
 
 # 先停服務再換檔：直接覆寫執行中的 binary 會讓還在跑的 process 當場崩潰。
-info "停止舊服務（若有）"
-stop_service
+# port 要在停服務「之前」就從既有設定讀出來——停完才知道要等哪個 port 被放掉就太遲了。
+# 這時 $INSTALL_DIR 還沒換上新版，用剛解壓出來的那個 node。
+PORT="$(read_configured_port "$TMP/vision-claude-server/VisionClaudeServer")"
+info "停止舊服務（若有），等 port $PORT 釋放"
+stop_service "$PORT"
 
 mkdir -p "$DATA_DIR"
 rm -rf "$INSTALL_DIR"
@@ -105,11 +132,8 @@ else
     }, null, 2) + "\n");
   ' "$CONFIG" "$CLAUDE_BIN"
 fi
-PORT="$("$NODE" -e '
-  const fs = require("fs");
-  try { console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).port ?? 8790); }
-  catch { console.log(8790); }
-' "$CONFIG")"
+# 設定可能剛被建立（新安裝）或被改過，重讀一次確保接下來註冊與健康檢查用的是同一個 port。
+PORT="$(read_configured_port "$NODE")"
 
 # ── LaunchAgent ─────────────────────────────────────────────────────────────
 # PATH 快照是必要的：claude 底下還會 spawn 各種 MCP server（uvx、npx…），launchd 給的
@@ -150,9 +174,12 @@ cat > "$PLIST" <<PLIST_EOF
 </plist>
 PLIST_EOF
 
-if lsof -nP -iTCP:"$PORT" -sTCP:LISTEN -t >/dev/null 2>&1; then
-  die "port $PORT 已經被佔用（pid: $(lsof -nP -iTCP:"$PORT" -sTCP:LISTEN -t | tr '\n' ' ')）。
-     那可能是你手動跑的舊 server，先結束它再重跑這行。"
+# 走到這裡舊服務早就停了，port 還被佔住就真的是別人的東西（手動跑的 pnpm dev、或別的程式）。
+HOLDERS="$(port_in_use "$PORT" | tr '\n' ' ')"
+if [ -n "$HOLDERS" ]; then
+  die "port $PORT 被佔用中（pid: $HOLDERS）。
+     常見原因是你另外手動跑了一個 server（pnpm dev / nohup）。
+     先結束它再重跑這行；服務本身已經停好，重跑不會有副作用。"
 fi
 
 launchctl bootstrap "$DOMAIN" "$PLIST"
