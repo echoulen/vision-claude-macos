@@ -60,7 +60,7 @@ uninstall() {
   rm -f "$PLIST"
   rm -rf "$INSTALL_DIR"
   ok "已移除 $INSTALL_DIR 與 $PLIST"
-  echo "   設定與 session 記錄保留在 $DATA_DIR（要一併清掉就手動 rm -rf 它）"
+  echo "   設定與 session 記錄保留在 ${DATA_DIR}（要一併清掉就手動 rm -rf 它）"
   exit 0
 }
 
@@ -70,7 +70,7 @@ uninstall() {
 [ "$(uname -s)" = "Darwin" ] || die "這個 server 只跑在 macOS（偵測到 $(uname -s)）。"
 
 ARCH="$(uname -m)"
-[ "$ARCH" = "arm64" ] || die "目前只提供 Apple Silicon（arm64）的發佈包，這台是 $ARCH。"
+[ "$ARCH" = "arm64" ] || die "目前只提供 Apple Silicon（arm64）的發佈包，這台是 ${ARCH}。"
 
 # 這個腳本是在使用者自己的終端機裡跑的，PATH 就是他平常的 PATH——claude 找得到、
 # 等一下寫進 LaunchAgent 的快照也才是對的（launchd 自己完全不繼承登入 shell 的 PATH）。
@@ -102,7 +102,7 @@ mkdir -p "$DATA_DIR"
 rm -rf "$INSTALL_DIR"
 mv "$TMP/vision-claude-server" "$INSTALL_DIR"
 VERSION="$(cat "$INSTALL_DIR/VERSION" 2>/dev/null || echo unknown)"
-ok "安裝到 $INSTALL_DIR（版本 $VERSION）"
+ok "安裝到 ${INSTALL_DIR}（版本 ${VERSION}）"
 
 # ── 設定 ────────────────────────────────────────────────────────────────────
 # token 不在這裡產生：server 首次啟動會自己補一把隨機值（見 server/src/config.ts），
@@ -177,20 +177,35 @@ PLIST_EOF
 # 走到這裡舊服務早就停了，port 還被佔住就真的是別人的東西（手動跑的 pnpm dev、或別的程式）。
 HOLDERS="$(port_in_use "$PORT" | tr '\n' ' ')"
 if [ -n "$HOLDERS" ]; then
-  die "port $PORT 被佔用中（pid: $HOLDERS）。
+  die "port ${PORT} 被佔用中（pid: ${HOLDERS}）。
      常見原因是你另外手動跑了一個 server（pnpm dev / nohup）。
      先結束它再重跑這行；服務本身已經停好，重跑不會有副作用。"
 fi
 
-launchctl bootstrap "$DOMAIN" "$PLIST"
-launchctl enable "$DOMAIN/$LABEL"
-launchctl kickstart -k "$DOMAIN/$LABEL"
+# bootout 回來、port 也放掉了，仍不代表馬上能 bootstrap：launchd 那邊的 service 可能還在
+# 過渡狀態，這時 bootstrap 會回 "Bootstrap failed: 5: Input/output error"。在 set -e 下那就是
+# 靜默中止——使用者只看到輸出停在「註冊登入自啟服務」，服務沒起來，也沒有任何錯誤訊息。
+# 實測(2026-08-14)就是這樣：手動再跑一次同一行 bootstrap 立刻就成功。
+bootstrap_service() {
+  local err=""
+  for _ in $(seq 1 8); do
+    if err="$(launchctl bootstrap "$DOMAIN" "$PLIST" 2>&1)"; then return 0; fi
+    sleep 1
+  done
+  die "註冊服務失敗：${err}
+     可以手動重試：launchctl bootstrap ${DOMAIN} ${PLIST}"
+}
+bootstrap_service
+# 這兩個失敗不致命：enable 只在服務曾被使用者停用時才有作用，而 plist 的 RunAtLoad 已經
+# 會把 server 拉起來，kickstart 只是讓它立刻發生。
+launchctl enable "$DOMAIN/$LABEL" 2>/dev/null || true
+launchctl kickstart -k "$DOMAIN/$LABEL" 2>/dev/null || true
 
 # ── 確認真的起來了 ──────────────────────────────────────────────────────────
 info "等待 server 回應"
 for _ in $(seq 1 40); do
   if curl -fsS --max-time 1 "http://127.0.0.1:$PORT/health" >/dev/null 2>&1; then
-    ok "server 已啟動（port $PORT，版本 $VERSION）"
+    ok "server 已啟動（port ${PORT}，版本 ${VERSION}）"
     cat <<DONE_EOF
 
   接下來在這台 Mac 的瀏覽器打開配對頁面，按「在 App 中開啟」即可連上 Vision Pro／
