@@ -12,7 +12,10 @@
 set -euo pipefail
 
 DIST_REPO="${VC_DIST_REPO:-echoulen/vision-claude-dist}"
-LABEL="io.nextdrive.vision-claude-server"
+# label 可覆蓋純粹是為了能測這支腳本本身：搭配另一個 HOME 與 port，就能把安裝流程完整跑到
+# 底（含 launchctl 註冊與健康檢查）而不動到正式服務。這支腳本的失敗方式都是「執行到某一行
+# 才炸」，不整段跑過就等於沒驗證。
+LABEL="${VC_LABEL:-io.nextdrive.vision-claude-server}"
 DATA_DIR="$HOME/.vision-claude"
 INSTALL_DIR="$DATA_DIR/server"
 CONFIG="$DATA_DIR/config.json"
@@ -26,8 +29,12 @@ info() { printf '\033[1;34m==>\033[0m %s\n' "$1"; }
 ok()   { printf '\033[1;32m ✓\033[0m %s\n' "$1"; }
 die()  { printf '\033[1;31m ✗\033[0m %s\n' "$1" >&2; exit 1; }
 
+# 「沒有人在聽」不是錯誤，是這個腳本最想看到的結果——但 lsof 對它回 exit 1，在
+# `set -e -o pipefail` 下會讓 `HOLDERS="$(port_in_use ... | tr ...)"` 這種賦值整個中止腳本。
+# 實測(2026-08-14)就是這樣停在「註冊登入自啟服務」之後：plist 寫好了、服務卻沒註冊。
+# 用 `|| true` 把它收成永遠成功、以輸出是否為空表達結果。
 port_in_use() {
-  lsof -nP -iTCP:"$1" -sTCP:LISTEN -t 2>/dev/null
+  lsof -nP -iTCP:"$1" -sTCP:LISTEN -t 2>/dev/null || true
 }
 
 # `launchctl bootout` 回來時 process 不保證已經退出：server 收到 SIGTERM 會先去收掉每個
