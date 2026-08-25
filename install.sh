@@ -24,10 +24,18 @@ DOMAIN="gui/$(id -u)"
 OUT_LOG="$HOME/Library/Logs/vision-claude-server.out.log"
 ERR_LOG="$HOME/Library/Logs/vision-claude-server.err.log"
 NODE="$INSTALL_DIR/VisionClaudeServer"
+# /Applications 是全機器共用的路徑,覆寫純粹是為了能測這支腳本本身——理由同 VC_LABEL。
+APP_DIR="${VC_APP_DIR:-/Applications}"
+APP_PATH="$APP_DIR/VisionClaude.app"
+APP_TARBALL_NAME="VisionClaude-macos.tar.gz"
+# 指向本機 tarball 時跳過下載直接用它。理由同 VC_LABEL/VC_APP_DIR:要能在 dist repo
+# 還沒有 App asset 的情況下,把安裝流程完整跑到底驗證這支腳本本身。
+APP_TARBALL_LOCAL="${VC_APP_TARBALL:-}"
 
 info() { printf '\033[1;34m==>\033[0m %s\n' "$1"; }
 ok()   { printf '\033[1;32m ✓\033[0m %s\n' "$1"; }
 die()  { printf '\033[1;31m ✗\033[0m %s\n' "$1" >&2; exit 1; }
+warn() { printf '\033[1;33m ！\033[0m %s\n' "$1" >&2; }
 
 # 「沒有人在聽」不是錯誤，是這個腳本最想看到的結果——但 lsof 對它回 exit 1，在
 # `set -e -o pipefail` 下會讓 `HOLDERS="$(port_in_use ... | tr ...)"` 這種賦值整個中止腳本。
@@ -61,12 +69,116 @@ read_configured_port() {
   ' "$CONFIG"
 }
 
+# ── macOS App ────────────────────────────────────────────────────────────────
+# 放在 server 之後安裝:App 安裝失敗時 server 仍然可用,而且 App 一啟動就有東西可連。
+#
+# 這裡所有失敗路徑都用 `warn` + `return 1`，不用 `die`:server 到這一步已經裝好且在跑，
+# 整支腳本不該以離開碼 1 收場，使用者更需要看到結尾那段「重啟／看 log／移除」。呼叫端
+# 負責把 return 1 轉成一段警告，並照常印出結尾區塊。
+install_app() {
+  local url="https://github.com/$DIST_REPO/releases/latest/download/$APP_TARBALL_NAME"
+  local tmp; tmp="$(mktemp -d)"
+
+  # staging 必須跟 $APP_PATH 在同一個檔案系統(這裡就是 $APP_DIR 底下),不能借用 $tmp:
+  # 稍後靠 mv 做原子替換的前提是來源與目的地同一個檔案系統,跨檔案系統的 mv 會退化成
+  # 複製再刪除,那就完全失去 staging 的意義。
+  local staging="$APP_DIR/.VisionClaude.app.new"
+  # staging 一起掛在 trap 上:任何一條失敗路徑都不能在 /Applications 留下一個 6MB 的
+  # 隱藏孤兒——它是點號開頭的，Finder 看不到，也沒有任何後續流程會去清它。成功路徑上
+  # staging 早已被 mv 走，這個 rm 是 no-op。
+  # shellcheck disable=SC2064
+  trap "rm -rf '$tmp' '$staging'" RETURN
+
+  if [ -n "$APP_TARBALL_LOCAL" ]; then
+    info "使用本機 App 包：$APP_TARBALL_LOCAL"
+    [ -f "$APP_TARBALL_LOCAL" ] || { warn "找不到 $APP_TARBALL_LOCAL"; return 1; }
+    cp "$APP_TARBALL_LOCAL" "$tmp/$APP_TARBALL_NAME" || { warn "複製本機 App 包失敗。"; return 1; }
+  else
+    info "下載 macOS App"
+    curl -fsSL "$url" -o "$tmp/$APP_TARBALL_NAME" || { warn "下載 App 失敗：$url"; return 1; }
+  fi
+  tar -xzf "$tmp/$APP_TARBALL_NAME" -C "$tmp" || { warn "App 解壓失敗，檔案可能不完整。"; return 1; }
+  [ -d "$tmp/VisionClaude.app" ] || { warn "解壓結果裡沒有 VisionClaude.app。"; return 1; }
+
+  # App 是純 client,所有狀態(session、對話)都在 server 端,關掉不會遺失任何東西,
+  # 頂多是輸入框裡尚未送出的草稿。
+  if pgrep -f "$APP_PATH/Contents/MacOS/VisionClaude" >/dev/null 2>&1; then
+    info "關閉執行中的 App"
+    osascript -e 'quit app "VisionClaude"' 2>/dev/null || true
+    sleep 1
+    pkill -f "$APP_PATH/Contents/MacOS/VisionClaude" 2>/dev/null || true
+    sleep 1
+  fi
+
+  mkdir -p "$APP_DIR" || { warn "建立 $APP_DIR 失敗。"; return 1; }
+
+  # 每一次都從乾淨的 staging 開始:上一次中途失敗留下的半成品若被沿用，可能混進舊檔案。
+  rm -rf "$staging" || { warn "清不掉舊的 ${staging}，請手動移除後重跑。"; return 1; }
+  ditto "$tmp/VisionClaude.app" "$staging" || { warn "安裝 App 到 $APP_DIR 失敗。"; return 1; }
+
+  # curl + tar 不會產生 quarantine,這裡是防禦性清除(例如使用者改用瀏覽器下載腳本
+  # 或壓縮檔的情況)。-r 是必要的:bundle 內層檔案各自帶屬性。
+  xattr -cr "$staging" 2>/dev/null || true
+
+  # 驗證要在替換 $APP_PATH 之前做:這裡失敗就直接放棄，舊 App 完全沒被動到，
+  # 使用者手上仍是原本能用的版本。
+  codesign --verify --deep --strict "$staging" 2>/dev/null \
+    || { warn "App 簽章驗證失敗，安裝可能不完整（舊版 App 未受影響）。"; return 1; }
+
+  # 為什麼是「先把舊的改名挪開」而不是「先刪掉舊的」:App Store／TestFlight 裝進
+  # /Applications 的 bundle 是 root:wheel 擁有的，admin 使用者 rm 不掉（rm 不會提權），
+  # 那條路對每一個從 TestFlight 遷移過來的使用者都會 Permission denied。但 /Applications
+  # 本身是 root:admin drwxrwxr-x，admin 對它有寫入權限，而「同一個父目錄之內的改名」只
+  # 需要父目錄可寫——所以那是唯一搬得動 root 擁有的 bundle 的方式。
+  #
+  # backup 一定要留在 $APP_DIR 底下，不能順手丟去垃圾桶或別的目錄:跨父目錄搬一個目錄
+  # 會動到它的 `..`，因此另外需要對「被搬的那個目錄本身」有寫入權限，對 root:wheel 的
+  # bundle 不成立（2026-08-25 沙盒實測:同層改名成功、搬到別的目錄 Permission denied）。
+  #
+  # 順帶保留原本的好處:「舊的離開」到「新的就位」之間只留一次 rename 的窗口，而不是
+  # 整個 ditto 的時長，把可能「新舊都不在」的空窗壓到最小。
+  local backup="$APP_DIR/.VisionClaude.app.old.$$"
+  if [ -e "$APP_PATH" ]; then
+    mv "$APP_PATH" "$backup" || {
+      warn "無法移走舊的 ${APP_PATH}（多半是 App Store／TestFlight 裝的，rm／mv 都不會提權）。
+     請在 Finder 裡把它拖到垃圾桶（Finder 會跳出授權對話框）後重跑這一行。"
+      return 1
+    }
+  fi
+  mv "$staging" "$APP_PATH" || {
+    [ -e "$backup" ] && mv "$backup" "$APP_PATH"
+    warn "安裝 App 失敗，已還原舊版。"
+    return 1
+  }
+  # 新版已經就位，收尾的刪除失敗不該讓整個安裝被判定為失敗（舊 bundle 若是 root:wheel
+  # 就真的只有 root 刪得掉），所以這裡只警告並給一行可以直接貼的指令。
+  rm -rf "$backup" 2>/dev/null \
+    || warn "新版已裝好，但舊版留在 ${backup}（root 擁有，只有 root 刪得掉）。要清掉就跑：
+     sudo rm -rf '${backup}'"
+
+  ok "已安裝 $APP_PATH"
+}
+
 uninstall() {
   info "停止並移除服務"
   stop_service
   rm -f "$PLIST"
   rm -rf "$INSTALL_DIR"
   ok "已移除 $INSTALL_DIR 與 $PLIST"
+  # 安裝時一起裝,移除也要一起移除,否則會留下一個連不到 server 的殘骸。
+  if [ -d "$APP_PATH" ]; then
+    osascript -e 'quit app "VisionClaude"' 2>/dev/null || true
+    sleep 1
+    pkill -f "$APP_PATH/Contents/MacOS/VisionClaude" 2>/dev/null || true
+    # rm 不會提權,App Store／TestFlight 裝的 bundle(root:wheel)刪不掉。失敗不能讓
+    # set -e 中止 uninstall——後面那句「設定與 session 記錄保留在…」才是使用者需要的資訊。
+    rm -rf "$APP_PATH" 2>/dev/null || true
+    if [ -e "$APP_PATH" ]; then
+      warn "無法移除 ${APP_PATH}（多半是 App Store／TestFlight 裝的）。請在 Finder 裡把它拖到垃圾桶。"
+    else
+      ok "已移除 $APP_PATH"
+    fi
+  fi
   echo "   設定與 session 記錄保留在 ${DATA_DIR}（要一併清掉就手動 rm -rf 它）"
   exit 0
 }
@@ -213,10 +325,22 @@ info "等待 server 回應"
 for _ in $(seq 1 40); do
   if curl -fsS --max-time 1 "http://127.0.0.1:$PORT/health" >/dev/null 2>&1; then
     ok "server 已啟動（port ${PORT}，版本 ${VERSION}）"
+    # App 沒裝成功不影響 server,結尾區塊照印:那裡的「重啟／看 log／移除」與配對網址
+    # 對只有 server 的使用者一樣有用,而以 die 收場只會讓人以為整件事都失敗了。
+    if install_app; then
+      APP_NOTE="  server 與 macOS App 都已就緒。App 已安裝到 ${APP_PATH}。"
+    else
+      APP_NOTE="  server 已就緒，但 macOS App 沒有裝成功（原因見上面那行警告）。
+  server 本身完全正常，Vision Pro 端現在就能配對使用;處理完上面說的問題後重跑
+  同一行，就會把 App 補上。"
+    fi
     cat <<DONE_EOF
 
-  接下來在這台 Mac 的瀏覽器打開配對頁面，按「在 App 中開啟」即可連上 Vision Pro／
-  macOS App，全程免打字：
+${APP_NOTE}
+
+  配對（Vision Pro 與 macOS App 都要各做一次）：打開下面這一頁，按「在 App 中開啟」，
+  server 位址與 token 就會帶進 App。在這台 Mac 的瀏覽器打開會開啟剛裝好的 macOS App；
+  Vision Pro 端請在 Vision Pro 的瀏覽器打開同一頁，位址換成這台 Mac 的區網 IP：
 
       http://127.0.0.1:$PORT/pair
 
