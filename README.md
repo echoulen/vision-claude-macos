@@ -1,27 +1,81 @@
-# vision-claude-dist
+# vision-claude
 
-[vision-claude](https://github.com/echoulen/vision-claude) 的 Mac server 公開發佈鏡像。原始碼不在這裡，這個 repo 只放安裝腳本與各版本的發佈包。
+Run Claude Code on your Mac, drive it from Vision Pro or from a native Mac app.
 
-## 安裝
+This repo is the public distribution channel — it hosts the installer and release builds only. The source lives in a private repo.
 
-在 Mac 的終端機貼上這行：
+## Requirements
+
+- Mac with Apple Silicon
+- [Claude Code CLI](https://claude.ai/install.sh)
+
+## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/echoulen/vision-claude-dist/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/echoulen/vision-claude-macos/main/install.sh | bash
 ```
 
-會下載自帶 node runtime 的發佈包到 `~/.vision-claude/server`、註冊成登入自啟的 launchd 服務，並印出配對網址。不需要 clone 任何 repo，也不需要先裝 node 或 pnpm——只需要 [Claude Code CLI](https://claude.ai/install.sh)。
+One command sets up both pieces:
 
-- **更新**：重跑同一行
-- **移除**：`curl -fsSL .../install.sh | bash -s -- --uninstall`
-- **重啟**：`launchctl kickstart -k gui/$(id -u)/io.nextdrive.vision-claude-server`
-- **看 log**：`tail -f ~/Library/Logs/vision-claude-server.err.log`
-
-目前只提供 Apple Silicon（arm64）的發佈包。
-
-## 內容
-
-| 項目 | 說明 |
+| | |
 |---|---|
-| `install.sh` | 安裝腳本。**唯一真實來源在 vision-claude repo**，由該 repo 的 Server Release workflow 同步過來，不要直接改這裡 |
-| Releases | `vision-claude-server-macos-arm64.tar.gz`，自帶 node runtime |
+| **Server** | `~/.vision-claude/server` — runs as a launchd service, starts at login |
+| **Mac app** | `/Applications/VisionClaude.app` |
+
+Nothing to clone, no Node or Xcode required.
+
+Re-run the same command to update. Your settings, tokens and session history live in `~/.vision-claude/` and are never touched by an update.
+
+## Getting started
+
+### 1. Pair your devices
+
+When the install finishes it prints a pairing URL:
+
+```
+http://127.0.0.1:8790/pair
+```
+
+Open it and click **Open in App**. The server address and token are handed over automatically — nothing to type or copy.
+
+- **Mac** — open the URL in a browser on this Mac. It launches the app you just installed.
+- **Vision Pro** — open the same page in the Vision Pro browser, replacing `127.0.0.1` with this Mac's LAN IP. Both devices must be on the same network.
+
+Each device pairs once.
+
+### 2. Start a session
+
+Press **⌘N**, pick a project folder, and start typing. A session is one Claude Code conversation bound to that folder.
+
+Every session gets its own window, and they keep running in the background — start something long, switch away, come back when it's done.
+
+### 3. Handy shortcuts
+
+| | |
+|---|---|
+| `⌘N` | New session |
+| `⌘0` | Session list |
+| `⌘1`–`⌘9` | Jump to a session |
+| `⌘⇧G` | Tile all windows |
+| `⌘⇧←` / `⌘⇧→` | Focus the window to the left / right |
+| `⌘,` | Settings |
+
+## Maintenance
+
+```bash
+# Restart the server
+launchctl kickstart -k gui/$(id -u)/io.nextdrive.vision-claude-server
+
+# Tail the log
+tail -f ~/Library/Logs/vision-claude-server.err.log
+
+# Uninstall (removes the server, the service and the Mac app)
+curl -fsSL https://raw.githubusercontent.com/echoulen/vision-claude-macos/main/install.sh | bash -s -- --uninstall
+```
+
+Settings and session history in `~/.vision-claude/` survive an uninstall. Delete that folder to remove them too.
+
+## Notes
+
+- The Mac app is distributed directly rather than through the App Store, and is signed ad-hoc. macOS allows it because `curl` downloads carry no quarantine flag. If you download a release asset with a browser instead, macOS will block it.
+- `install.sh` is mirrored here from the source repo. Don't edit it in this repo — changes will be overwritten on the next release.
