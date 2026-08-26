@@ -7,7 +7,7 @@ This repo is the public distribution channel — it hosts the installer and rele
 ## Requirements
 
 - Mac with Apple Silicon
-- [Claude Code CLI](https://claude.ai/install.sh)
+- Claude Code CLI, already installed and logged in
 
 ## Install
 
