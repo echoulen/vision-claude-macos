@@ -62,21 +62,6 @@ Every session gets its own window, and they keep running in the background — s
 | `⌘⇧←` / `⌘⇧→` | Focus the window to the left / right |
 | `⌘,` | Settings |
 
-## Maintenance
-
-```bash
-# Restart the server
-launchctl kickstart -k gui/$(id -u)/io.nextdrive.vision-claude-server
-
-# Tail the log
-tail -f ~/Library/Logs/vision-claude-server.err.log
-
-# Uninstall (removes the server, the service and the Mac app)
-curl -fsSL https://raw.githubusercontent.com/echoulen/vision-claude-macos/main/install.sh | bash -s -- --uninstall
-```
-
-Settings and session history in `~/.vision-claude/` survive an uninstall. Delete that folder to remove them too.
-
 ## Notes
 
 - The Mac app is distributed directly rather than through the App Store, and is signed ad-hoc. macOS allows it because `curl` downloads carry no quarantine flag. If you download a release asset with a browser instead, macOS will block it.
