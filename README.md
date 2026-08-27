@@ -4,6 +4,8 @@ Run Claude Code on your Mac, drive it from Vision Pro or from a native Mac app.
 
 This repo is the public distribution channel — it hosts the installer and release builds only. The source lives in a private repo.
 
+**[UI design showcase →](https://echoulen.github.io/vision-claude-macos/)**
+
 ## Requirements
 
 - Mac with Apple Silicon
