@@ -1,7 +1,7 @@
 #!/bin/bash
 # vision-claude server 一鍵安裝／更新／解除安裝。
 #
-#   curl -fsSL https://raw.githubusercontent.com/echoulen/vision-claude-dist/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/echoulen/vision-claude-macos/main/install.sh | bash
 #   curl -fsSL .../install.sh | bash -s -- --uninstall
 #
 # 做完這些事：下載發佈包 → 解壓到 ~/.vision-claude/server → 產生設定 → 註冊成登入自啟的
@@ -11,7 +11,7 @@
 # 底下、跟程式目錄分開，更新不會動到它們。
 set -euo pipefail
 
-DIST_REPO="${VC_DIST_REPO:-echoulen/vision-claude-dist}"
+DIST_REPO="${VC_DIST_REPO:-echoulen/vision-claude-macos}"
 # label 可覆蓋純粹是為了能測這支腳本本身：搭配另一個 HOME 與 port，就能把安裝流程完整跑到
 # 底（含 launchctl 註冊與健康檢查）而不動到正式服務。這支腳本的失敗方式都是「執行到某一行
 # 才炸」，不整段跑過就等於沒驗證。
@@ -90,31 +90,31 @@ install_app() {
   trap "rm -rf '$tmp' '$staging'" RETURN
 
   if [ -n "$APP_TARBALL_LOCAL" ]; then
-    info "使用本機 App 包：$APP_TARBALL_LOCAL"
-    [ -f "$APP_TARBALL_LOCAL" ] || { warn "找不到 $APP_TARBALL_LOCAL"; return 1; }
-    cp "$APP_TARBALL_LOCAL" "$tmp/$APP_TARBALL_NAME" || { warn "複製本機 App 包失敗。"; return 1; }
+    info "Using local App bundle: $APP_TARBALL_LOCAL"
+    [ -f "$APP_TARBALL_LOCAL" ] || { warn "$APP_TARBALL_LOCAL not found"; return 1; }
+    cp "$APP_TARBALL_LOCAL" "$tmp/$APP_TARBALL_NAME" || { warn "Failed to copy local App bundle."; return 1; }
   else
-    info "下載 macOS App"
-    curl -fsSL "$url" -o "$tmp/$APP_TARBALL_NAME" || { warn "下載 App 失敗：$url"; return 1; }
+    info "Downloading macOS App"
+    curl -fsSL "$url" -o "$tmp/$APP_TARBALL_NAME" || { warn "Failed to download App: $url"; return 1; }
   fi
-  tar -xzf "$tmp/$APP_TARBALL_NAME" -C "$tmp" || { warn "App 解壓失敗，檔案可能不完整。"; return 1; }
-  [ -d "$tmp/VisionClaude.app" ] || { warn "解壓結果裡沒有 VisionClaude.app。"; return 1; }
+  tar -xzf "$tmp/$APP_TARBALL_NAME" -C "$tmp" || { warn "Failed to extract App archive, the file may be incomplete."; return 1; }
+  [ -d "$tmp/VisionClaude.app" ] || { warn "VisionClaude.app not found in the extracted archive."; return 1; }
 
   # App 是純 client,所有狀態(session、對話)都在 server 端,關掉不會遺失任何東西,
   # 頂多是輸入框裡尚未送出的草稿。
   if pgrep -f "$APP_PATH/Contents/MacOS/VisionClaude" >/dev/null 2>&1; then
-    info "關閉執行中的 App"
+    info "Quitting running App"
     osascript -e 'quit app "VisionClaude"' 2>/dev/null || true
     sleep 1
     pkill -f "$APP_PATH/Contents/MacOS/VisionClaude" 2>/dev/null || true
     sleep 1
   fi
 
-  mkdir -p "$APP_DIR" || { warn "建立 $APP_DIR 失敗。"; return 1; }
+  mkdir -p "$APP_DIR" || { warn "Failed to create $APP_DIR."; return 1; }
 
   # 每一次都從乾淨的 staging 開始:上一次中途失敗留下的半成品若被沿用，可能混進舊檔案。
-  rm -rf "$staging" || { warn "清不掉舊的 ${staging}，請手動移除後重跑。"; return 1; }
-  ditto "$tmp/VisionClaude.app" "$staging" || { warn "安裝 App 到 $APP_DIR 失敗。"; return 1; }
+  rm -rf "$staging" || { warn "Could not remove stale ${staging}, remove it manually and rerun."; return 1; }
+  ditto "$tmp/VisionClaude.app" "$staging" || { warn "Failed to install App to $APP_DIR."; return 1; }
 
   # curl + tar 不會產生 quarantine,這裡是防禦性清除(例如使用者改用瀏覽器下載腳本
   # 或壓縮檔的情況)。-r 是必要的:bundle 內層檔案各自帶屬性。
@@ -123,7 +123,7 @@ install_app() {
   # 驗證要在替換 $APP_PATH 之前做:這裡失敗就直接放棄，舊 App 完全沒被動到，
   # 使用者手上仍是原本能用的版本。
   codesign --verify --deep --strict "$staging" 2>/dev/null \
-    || { warn "App 簽章驗證失敗，安裝可能不完整（舊版 App 未受影響）。"; return 1; }
+    || { warn "App signature verification failed, the install may be incomplete (the previous App is unaffected)."; return 1; }
 
   # 為什麼是「先把舊的改名挪開」而不是「先刪掉舊的」:App Store／TestFlight 裝進
   # /Applications 的 bundle 是 root:wheel 擁有的，admin 使用者 rm 不掉（rm 不會提權），
@@ -140,31 +140,31 @@ install_app() {
   local backup="$APP_DIR/.VisionClaude.app.old.$$"
   if [ -e "$APP_PATH" ]; then
     mv "$APP_PATH" "$backup" || {
-      warn "無法移走舊的 ${APP_PATH}（多半是 App Store／TestFlight 裝的，rm／mv 都不會提權）。
-     請在 Finder 裡把它拖到垃圾桶（Finder 會跳出授權對話框）後重跑這一行。"
+      warn "Could not move the existing ${APP_PATH} out of the way (it's likely installed via App Store/TestFlight, and rm/mv can't elevate privileges).
+     Drag it to the Trash in Finder (Finder will prompt for authorization), then rerun this line."
       return 1
     }
   fi
   mv "$staging" "$APP_PATH" || {
     [ -e "$backup" ] && mv "$backup" "$APP_PATH"
-    warn "安裝 App 失敗，已還原舊版。"
+    warn "Failed to install App, the previous version has been restored."
     return 1
   }
   # 新版已經就位，收尾的刪除失敗不該讓整個安裝被判定為失敗（舊 bundle 若是 root:wheel
   # 就真的只有 root 刪得掉），所以這裡只警告並給一行可以直接貼的指令。
   rm -rf "$backup" 2>/dev/null \
-    || warn "新版已裝好，但舊版留在 ${backup}（root 擁有，只有 root 刪得掉）。要清掉就跑：
+    || warn "The new App is installed, but the previous version is left at ${backup} (owned by root, only root can delete it). To clean it up, run:
      sudo rm -rf '${backup}'"
 
-  ok "已安裝 $APP_PATH"
+  ok "Installed $APP_PATH"
 }
 
 uninstall() {
-  info "停止並移除服務"
+  info "Stopping and removing the service"
   stop_service
   rm -f "$PLIST"
   rm -rf "$INSTALL_DIR"
-  ok "已移除 $INSTALL_DIR 與 $PLIST"
+  ok "Removed $INSTALL_DIR and $PLIST"
   # 安裝時一起裝,移除也要一起移除,否則會留下一個連不到 server 的殘骸。
   if [ -d "$APP_PATH" ]; then
     osascript -e 'quit app "VisionClaude"' 2>/dev/null || true
@@ -174,29 +174,29 @@ uninstall() {
     # set -e 中止 uninstall——後面那句「設定與 session 記錄保留在…」才是使用者需要的資訊。
     rm -rf "$APP_PATH" 2>/dev/null || true
     if [ -e "$APP_PATH" ]; then
-      warn "無法移除 ${APP_PATH}（多半是 App Store／TestFlight 裝的）。請在 Finder 裡把它拖到垃圾桶。"
+      warn "Could not remove ${APP_PATH} (it's likely installed via App Store/TestFlight). Drag it to the Trash in Finder."
     else
-      ok "已移除 $APP_PATH"
+      ok "Removed $APP_PATH"
     fi
   fi
-  echo "   設定與 session 記錄保留在 ${DATA_DIR}（要一併清掉就手動 rm -rf 它）"
+  echo "   Config and session data remain in ${DATA_DIR} (remove them manually with rm -rf if you want them gone too)"
   exit 0
 }
 
 [ "${1:-}" = "--uninstall" ] && uninstall
 
 # ── 環境檢查 ────────────────────────────────────────────────────────────────
-[ "$(uname -s)" = "Darwin" ] || die "這個 server 只跑在 macOS（偵測到 $(uname -s)）。"
+[ "$(uname -s)" = "Darwin" ] || die "This server only runs on macOS (detected $(uname -s))."
 
 ARCH="$(uname -m)"
-[ "$ARCH" = "arm64" ] || die "目前只提供 Apple Silicon（arm64）的發佈包，這台是 ${ARCH}。"
+[ "$ARCH" = "arm64" ] || die "Only Apple Silicon (arm64) releases are available right now, this machine is ${ARCH}."
 
 # 這個腳本是在使用者自己的終端機裡跑的，PATH 就是他平常的 PATH——claude 找得到、
 # 等一下寫進 LaunchAgent 的快照也才是對的（launchd 自己完全不繼承登入 shell 的 PATH）。
 CLAUDE_BIN="$(command -v claude || true)"
-[ -n "$CLAUDE_BIN" ] || die "找不到 claude CLI。先安裝 Claude Code 再重跑這行：
+[ -n "$CLAUDE_BIN" ] || die "claude CLI not found. Install Claude Code first, then rerun this line:
      curl -fsSL https://claude.ai/install.sh | bash"
-ok "claude CLI：$CLAUDE_BIN"
+ok "claude CLI: $CLAUDE_BIN"
 
 # ── 下載並替換程式目錄 ──────────────────────────────────────────────────────
 TARBALL_NAME="vision-claude-server-macos-$ARCH.tar.gz"
@@ -204,24 +204,24 @@ URL="https://github.com/$DIST_REPO/releases/latest/download/$TARBALL_NAME"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-info "下載 $TARBALL_NAME"
+info "Downloading $TARBALL_NAME"
 curl -fSL --progress-bar "$URL" -o "$TMP/$TARBALL_NAME" \
-  || die "下載失敗：$URL"
-tar -xzf "$TMP/$TARBALL_NAME" -C "$TMP" || die "解壓失敗，檔案可能不完整。"
-[ -x "$TMP/vision-claude-server/VisionClaudeServer" ] || die "發佈包內容不符預期。"
+  || die "Download failed: $URL"
+tar -xzf "$TMP/$TARBALL_NAME" -C "$TMP" || die "Failed to extract archive, the file may be incomplete."
+[ -x "$TMP/vision-claude-server/VisionClaudeServer" ] || die "Release archive contents don't match what was expected."
 
 # 先停服務再換檔：直接覆寫執行中的 binary 會讓還在跑的 process 當場崩潰。
 # port 要在停服務「之前」就從既有設定讀出來——停完才知道要等哪個 port 被放掉就太遲了。
 # 這時 $INSTALL_DIR 還沒換上新版，用剛解壓出來的那個 node。
 PORT="$(read_configured_port "$TMP/vision-claude-server/VisionClaudeServer")"
-info "停止舊服務（若有），等 port $PORT 釋放"
+info "Stopping the previous service (if any), waiting for port $PORT to be released"
 stop_service "$PORT"
 
 mkdir -p "$DATA_DIR"
 rm -rf "$INSTALL_DIR"
 mv "$TMP/vision-claude-server" "$INSTALL_DIR"
 VERSION="$(cat "$INSTALL_DIR/VERSION" 2>/dev/null || echo unknown)"
-ok "安裝到 ${INSTALL_DIR}（版本 ${VERSION}）"
+ok "Installed to ${INSTALL_DIR} (version ${VERSION})"
 
 # ── 設定 ────────────────────────────────────────────────────────────────────
 # token 不在這裡產生：server 首次啟動會自己補一把隨機值（見 server/src/config.ts），
@@ -232,7 +232,7 @@ ok "安裝到 ${INSTALL_DIR}（版本 ${VERSION}）"
 #
 # 用剛解壓的 node 改 JSON，不假設這台機器有 node/python/jq。
 if [ -f "$CONFIG" ]; then
-  info "更新既有設定的 claudeBin"
+  info "Updating claudeBin in the existing config"
   "$NODE" -e '
     const fs = require("fs");
     const [file, claudeBin] = process.argv.slice(1);
@@ -241,7 +241,7 @@ if [ -f "$CONFIG" ]; then
     fs.writeFileSync(file, JSON.stringify(cfg, null, 2) + "\n");
   ' "$CONFIG" "$CLAUDE_BIN"
 else
-  info "建立設定 $CONFIG"
+  info "Creating config $CONFIG"
   "$NODE" -e '
     const fs = require("fs");
     const [file, claudeBin] = process.argv.slice(1);
@@ -257,7 +257,7 @@ PORT="$(read_configured_port "$NODE")"
 # ── LaunchAgent ─────────────────────────────────────────────────────────────
 # PATH 快照是必要的：claude 底下還會 spawn 各種 MCP server（uvx、npx…），launchd 給的
 # 預設 PATH 只有 /usr/bin:/bin:/usr/sbin:/sbin，那些工具一個都找不到。
-info "註冊登入自啟服務"
+info "Registering the launch-at-login service"
 mkdir -p "$HOME/Library/LaunchAgents"
 
 # plist 是 XML：路徑或 PATH 裡只要有一個 & 就會讓整份設定檔解析失敗，服務靜默載入不起來。
@@ -296,9 +296,9 @@ PLIST_EOF
 # 走到這裡舊服務早就停了，port 還被佔住就真的是別人的東西（手動跑的 pnpm dev、或別的程式）。
 HOLDERS="$(port_in_use "$PORT" | tr '\n' ' ')"
 if [ -n "$HOLDERS" ]; then
-  die "port ${PORT} 被佔用中（pid: ${HOLDERS}）。
-     常見原因是你另外手動跑了一個 server（pnpm dev / nohup）。
-     先結束它再重跑這行；服務本身已經停好，重跑不會有副作用。"
+  die "Port ${PORT} is already in use (pid: ${HOLDERS}).
+     This usually means another server is running manually (pnpm dev / nohup).
+     Stop it and rerun this line; the service itself is already stopped, so rerunning is safe."
 fi
 
 # bootout 回來、port 也放掉了，仍不代表馬上能 bootstrap：launchd 那邊的 service 可能還在
@@ -311,8 +311,8 @@ bootstrap_service() {
     if err="$(launchctl bootstrap "$DOMAIN" "$PLIST" 2>&1)"; then return 0; fi
     sleep 1
   done
-  die "註冊服務失敗：${err}
-     可以手動重試：launchctl bootstrap ${DOMAIN} ${PLIST}"
+  die "Failed to register the service: ${err}
+     You can retry manually: launchctl bootstrap ${DOMAIN} ${PLIST}"
 }
 bootstrap_service
 # 這兩個失敗不致命：enable 只在服務曾被使用者停用時才有作用，而 plist 的 RunAtLoad 已經
@@ -321,38 +321,39 @@ launchctl enable "$DOMAIN/$LABEL" 2>/dev/null || true
 launchctl kickstart -k "$DOMAIN/$LABEL" 2>/dev/null || true
 
 # ── 確認真的起來了 ──────────────────────────────────────────────────────────
-info "等待 server 回應"
+info "Waiting for the server to respond"
 for _ in $(seq 1 40); do
   if curl -fsS --max-time 1 "http://127.0.0.1:$PORT/health" >/dev/null 2>&1; then
-    ok "server 已啟動（port ${PORT}，版本 ${VERSION}）"
+    ok "Server started (port ${PORT}, version ${VERSION})"
     # App 沒裝成功不影響 server,結尾區塊照印:那裡的「重啟／看 log／移除」與配對網址
     # 對只有 server 的使用者一樣有用,而以 die 收場只會讓人以為整件事都失敗了。
     if install_app; then
-      APP_NOTE="  server 與 macOS App 都已就緒。App 已安裝到 ${APP_PATH}。"
+      APP_NOTE="  The server and macOS App are both ready. The App is installed at ${APP_PATH}."
     else
-      APP_NOTE="  server 已就緒，但 macOS App 沒有裝成功（原因見上面那行警告）。
-  server 本身完全正常，Vision Pro 端現在就能配對使用;處理完上面說的問題後重跑
-  同一行，就會把 App 補上。"
+      APP_NOTE="  The server is ready, but the macOS App failed to install (see the warning above).
+  The server itself is fully functional and Vision Pro can pair with it now; after
+  fixing the issue above, rerun this line to install the App."
     fi
     cat <<DONE_EOF
 
 ${APP_NOTE}
 
-  配對（Vision Pro 與 macOS App 都要各做一次）：打開下面這一頁，按「在 App 中開啟」，
-  server 位址與 token 就會帶進 App。在這台 Mac 的瀏覽器打開會開啟剛裝好的 macOS App；
-  Vision Pro 端請在 Vision Pro 的瀏覽器打開同一頁，位址換成這台 Mac 的區網 IP：
+  Pairing (do this once each for Vision Pro and the macOS App): open the page below and
+  tap "Open in App" — the server address and token will be passed into the App. Opening
+  it in this Mac's browser launches the macOS App you just installed; on Vision Pro,
+  open the same page in its browser, with the address replaced by this Mac's LAN IP:
 
       http://127.0.0.1:$PORT/pair
 
-  其他指令：
-      重啟    launchctl kickstart -k $DOMAIN/$LABEL
-      看 log  tail -f $ERR_LOG
-      移除    curl -fsSL https://raw.githubusercontent.com/$DIST_REPO/main/install.sh | bash -s -- --uninstall
+  Other commands:
+      restart     launchctl kickstart -k $DOMAIN/$LABEL
+      view logs   tail -f $ERR_LOG
+      uninstall   curl -fsSL https://raw.githubusercontent.com/$DIST_REPO/main/install.sh | bash -s -- --uninstall
 DONE_EOF
     exit 0
   fi
   sleep 0.5
 done
 
-die "server 在 20 秒內沒有回應，看一下錯誤輸出：
+die "The server didn't respond within 20 seconds, check the error output:
      tail -n 50 $ERR_LOG"
