@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="00 · Index (Sci-Fi HUD)" description="vision-claude UI 設計稿 — 科幻 HUD 總覽與導覽頁，連結全部 7 個畫面" -->
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/radius-elevation.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/styles.css">
+  <script src="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/_ds_bundle.js"></script>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+    :root{ --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; }
+    body{ margin:0; font-family:var(--font-sans); -webkit-font-smoothing:antialiased; }
+    a{ color:#5AA9FF; text-decoration:none; } a:hover{ color:#8CC3FF; }
+    .vc-card{ transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+    .vc-card:hover{ transform:translateY(-3px); border-color:rgba(90,169,255,.6); box-shadow:0 24px 50px -16px rgba(0,0,0,.7), 0 0 40px -8px rgba(67,131,228,.6); }
+    @keyframes vc-grid{ from{ background-position:0 0 } to{ background-position:0 60px } }
+    @keyframes vc-boot{ 0%{ opacity:0; transform:translateY(12px) } 60%{ opacity:1 } 100%{ opacity:1; transform:translateY(0) } }
+    @keyframes vc-signal{ 0%,100%{ opacity:.4 } 50%{ opacity:1 } }
+  </style>
+</helmet>
+
+<div style="position:relative; min-height:100vh; padding:64px 40px 100px; box-sizing:border-box; overflow:hidden; font-family:var(--font-sans); color:#DCE8FA;
+            background:radial-gradient(ellipse 900px 520px at 50% -8%, rgba(67,131,228,.2), transparent 60%), radial-gradient(ellipse 700px 500px at 82% 112%, rgba(25,203,182,.12), transparent 60%), linear-gradient(180deg,#05070C,#03040a);">
+
+  <!-- perspective grid floor -->
+  <div style="position:absolute; left:-20%; right:-20%; bottom:0; height:38%; pointer-events:none; z-index:0; background-image:linear-gradient(rgba(90,169,255,.32) 1px, transparent 1px), linear-gradient(90deg, rgba(90,169,255,.16) 1px, transparent 1px); background-size:64px 64px, 64px 64px; transform:perspective(400px) rotateX(74deg); transform-origin:bottom center; -webkit-mask-image:linear-gradient(0deg,#000,transparent 80%); mask-image:linear-gradient(0deg,#000,transparent 80%); animation:vc-grid 4.5s linear infinite;"></div>
+
+  <div style="position:relative; z-index:1; max-width:1180px; margin:0 auto 8px;">
+    <div style="display:inline-flex; align-items:center; gap:8px; margin-bottom:18px;">
+      <span style="width:9px; height:9px; border-radius:50%; background:#3EE2C9; box-shadow:0 0 8px 1px rgba(62,226,201,.9); animation:vc-signal 1.6s ease-in-out infinite;"></span>
+      <span style="font:700 13px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:rgba(140,195,255,.7);">vision-claude</span>
+    </div>
+    <span style="display:block; font:800 38px/1.15 var(--font-sans); color:#EAF2FF; letter-spacing:-.01em; text-shadow:0 0 26px rgba(90,169,255,.5);">visionOS App — Sci-Fi HUD design</span>
+    <p style="margin:14px 0 0; font:400 16px/1.7 var(--font-sans); color:rgba(190,217,255,.62); max-width:780px;">Based on the 2026-07-07 UI Brief, with a sci-fi HUD visual direction. 7 screens total, each a Design Component you can open directly in a browser; screen 03 (Chat) includes interactive expand/collapse, slash filtering, permission mode and model menus.</p>
+  </div>
+
+  <!-- system summary -->
+  <div style="position:relative; z-index:1; max-width:1180px; margin:32px auto 44px; border-radius:16px; padding:24px 26px; display:flex; flex-direction:column; gap:14px;
+              background:linear-gradient(160deg, rgba(16,27,45,.78), rgba(7,12,22,.74)); border:1px solid rgba(90,169,255,.3); box-shadow:0 0 50px -16px rgba(67,131,228,.4);">
+    <span style="font:700 10px/1 var(--font-mono); text-transform:uppercase; letter-spacing:.2em; color:#5AA9FF;">◇ Visual system summary</span>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:18px;">
+      <div>
+        <div style="font:700 13.5px/1.3 var(--font-sans); color:#EAF2FF; margin-bottom:4px;">Sci-fi HUD language</div>
+        <div style="font:400 13px/1.6 var(--font-sans); color:rgba(190,217,255,.6);">Perspective grid floor, holographic dark panels, corner brackets, scan bands, light trails along execution paths, glowing status orbs — evoking a "cockpit control console" feel.</div>
+      </div>
+      <div>
+        <div style="font:700 13.5px/1.3 var(--font-sans); color:#EAF2FF; margin-bottom:4px;">Color (carried over from EneSense)</div>
+        <div style="font:400 13px/1.6 var(--font-sans); color:rgba(190,217,255,.6);">Primary blue brightened to holographic blue #5AA9FF; success teal #3EE2C9, warning orange, and error red are brightened in tandem with added glow. Meaning unchanged — it just glows now.</div>
+      </div>
+      <div>
+        <div style="font:700 13.5px/1.3 var(--font-sans); color:#EAF2FF; margin-bottom:4px;">Typography</div>
+        <div style="font:400 13px/1.6 var(--font-sans); color:rgba(190,217,255,.6);">Monospace (SF Mono / JetBrains Mono) is used extensively for ids, JSON, commands, telemetry numbers, and all-caps microlabels to reinforce the terminal/HUD feel; body copy uses sans.</div>
+      </div>
+      <div>
+        <div style="font:700 13.5px/1.3 var(--font-sans); color:#EAF2FF; margin-bottom:4px;">Motion</div>
+        <div style="font:400 13px/1.6 var(--font-sans); color:rgba(190,217,255,.6);">Grid advances slowly, scan bands sweep across panels, cards "boot in" one by one, status orbs pulse, sound waves and signal bars tick. Motion stays restrained and never interferes with reading.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- grid of screens -->
+  <div style="position:relative; z-index:1; max-width:1180px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:18px;">
+
+    <a href="01-session-list.dc.html" class="vc-card" style="display:block; border-radius:16px; padding:22px 24px; background:linear-gradient(160deg, rgba(16,27,45,.7), rgba(9,14,24,.68)); border:1px solid rgba(90,169,255,.28); box-shadow:0 0 30px -14px rgba(67,131,228,.4); animation:vc-boot .5s ease both;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+        <span style="width:36px; height:36px; border-radius:10px; background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.35); color:#8CC3FF; display:flex; align-items:center; justify-content:center; font:700 14px/1 var(--font-mono); flex-shrink:0; box-shadow:0 0 12px -3px rgba(90,169,255,.6);">01</span>
+        <span style="font:700 17px/1.3 var(--font-sans); color:#EAF2FF;">Session list</span>
+      </div>
+      <div style="font:400 13.5px/1.6 var(--font-sans); color:rgba(190,217,255,.6);">App home. Status pill/spine system, boot-in animation, empty state.</div>
+    </a>
+
+    <a href="02-new-session.dc.html" class="vc-card" style="display:block; border-radius:16px; padding:22px 24px; background:linear-gradient(160deg, rgba(16,27,45,.7), rgba(9,14,24,.68)); border:1px solid rgba(90,169,255,.28); box-shadow:0 0 30px -14px rgba(67,131,228,.4); animation:vc-boot .5s ease .06s both;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+        <span style="width:36px; height:36px; border-radius:10px; background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.35); color:#8CC3FF; display:flex; align-items:center; justify-content:center; font:700 14px/1 var(--font-mono); flex-shrink:0; box-shadow:0 0 12px -3px rgba(90,169,255,.6);">02</span>
+        <span style="font:700 17px/1.3 var(--font-sans); color:#EAF2FF;">New session</span>
+      </div>
+      <div style="font:400 13.5px/1.6 var(--font-sans); color:rgba(190,217,255,.6);">Two steps: select project → new conversation / resume existing conversation.</div>
+    </a>
+
+    <a href="03-chat.dc.html" class="vc-card" style="display:block; border-radius:16px; padding:22px 24px; background:linear-gradient(160deg, rgba(24,40,68,.8), rgba(12,20,36,.76)); border:1px solid rgba(90,169,255,.6); box-shadow:0 0 40px -10px rgba(67,131,228,.7); animation:vc-boot .5s ease .12s both;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+        <span style="width:36px; height:36px; border-radius:10px; background:linear-gradient(180deg,#5AA9FF,#2F6FD6); color:#fff; display:flex; align-items:center; justify-content:center; font:700 14px/1 var(--font-mono); flex-shrink:0; box-shadow:0 0 16px -2px rgba(90,169,255,.85);">03</span>
+        <span style="font:700 17px/1.3 var(--font-sans); color:#EAF2FF;">Chat (core screen)</span>
+        <span style="margin-left:auto; font:600 9px/1 var(--font-mono); letter-spacing:.1em; color:#8CC3FF; text-transform:uppercase;">Interactive</span>
+      </div>
+      <div style="font:400 13.5px/1.6 var(--font-sans); color:rgba(190,217,255,.6);">Execution trace, permission approvals, permission mode / slash / model menus.</div>
+    </a>
+
+    <a href="04-diff.dc.html" class="vc-card" style="display:block; border-radius:16px; padding:22px 24px; background:linear-gradient(160deg, rgba(16,27,45,.7), rgba(9,14,24,.68)); border:1px solid rgba(90,169,255,.28); box-shadow:0 0 30px -14px rgba(67,131,228,.4); animation:vc-boot .5s ease .18s both;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+        <span style="width:36px; height:36px; border-radius:10px; background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.35); color:#8CC3FF; display:flex; align-items:center; justify-content:center; font:700 14px/1 var(--font-mono); flex-shrink:0; box-shadow:0 0 12px -3px rgba(90,169,255,.6);">04</span>
+        <span style="font:700 17px/1.3 var(--font-sans); color:#EAF2FF;">Changes (Diff)</span>
+      </div>
+      <div style="font:400 13.5px/1.6 var(--font-sans); color:rgba(190,217,255,.6);">Loading / failed / no changes / file list / single-file diff.</div>
+    </a>
+
+    <a href="05-settings.dc.html" class="vc-card" style="display:block; border-radius:16px; padding:22px 24px; background:linear-gradient(160deg, rgba(16,27,45,.7), rgba(9,14,24,.68)); border:1px solid rgba(90,169,255,.28); box-shadow:0 0 30px -14px rgba(67,131,228,.4); animation:vc-boot .5s ease .24s both;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+        <span style="width:36px; height:36px; border-radius:10px; background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.35); color:#8CC3FF; display:flex; align-items:center; justify-content:center; font:700 14px/1 var(--font-mono); flex-shrink:0; box-shadow:0 0 12px -3px rgba(90,169,255,.6);">05</span>
+        <span style="font:700 17px/1.3 var(--font-sans); color:#EAF2FF;">Settings</span>
+      </div>
+      <div style="font:400 13.5px/1.6 var(--font-sans); color:rgba(190,217,255,.6);">Server/Token form + "Pair via browser" entry point.</div>
+    </a>
+
+    <a href="06-pair-web.dc.html" class="vc-card" style="display:block; border-radius:16px; padding:22px 24px; background:linear-gradient(160deg, rgba(16,27,45,.7), rgba(9,14,24,.68)); border:1px solid rgba(90,169,255,.28); box-shadow:0 0 30px -14px rgba(67,131,228,.4); animation:vc-boot .5s ease .3s both;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+        <span style="width:36px; height:36px; border-radius:10px; background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.35); color:#8CC3FF; display:flex; align-items:center; justify-content:center; font:700 14px/1 var(--font-mono); flex-shrink:0; box-shadow:0 0 12px -3px rgba(90,169,255,.6);">06</span>
+        <span style="font:700 17px/1.3 var(--font-sans); color:#EAF2FF;">Pairing — web page</span>
+      </div>
+      <div style="font:400 13.5px/1.6 var(--font-sans); color:rgba(190,217,255,.6);">Safari/desktop browser page, sci-fi dark web styling.</div>
+    </a>
+
+    <a href="07-pair-app-confirm.dc.html" class="vc-card" style="display:block; border-radius:16px; padding:22px 24px; background:linear-gradient(160deg, rgba(16,27,45,.7), rgba(9,14,24,.68)); border:1px solid rgba(90,169,255,.28); box-shadow:0 0 30px -14px rgba(67,131,228,.4); animation:vc-boot .5s ease .36s both;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+        <span style="width:36px; height:36px; border-radius:10px; background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.35); color:#8CC3FF; display:flex; align-items:center; justify-content:center; font:700 14px/1 var(--font-mono); flex-shrink:0; box-shadow:0 0 12px -3px rgba(90,169,255,.6);">07</span>
+        <span style="font:700 17px/1.3 var(--font-sans); color:#EAF2FF;">Pairing — app-side confirm</span>
+      </div>
+      <div style="font:400 13.5px/1.6 var(--font-sans); color:rgba(190,217,255,.6);">Confirmation card after the deep link is caught, using the app's HUD language.</div>
+    </a>
+
+  </div>
+
+</div>
+
+</x-dc>
+</body>
+</html>

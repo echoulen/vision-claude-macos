@@ -1,0 +1,12 @@
+/* ============================================================
+   EneSense Design System — global entry point
+   Consumers link THIS file only. It is an @import manifest;
+   every token + font file in the system is reachable from here.
+   Order: fonts → foundations → semantic layers.
+   ============================================================ */
+
+@import "./tokens/fonts.css";
+@import "./tokens/colors.css";
+@import "./tokens/typography.css";
+@import "./tokens/spacing.css";
+@import "./tokens/radius-elevation.css";

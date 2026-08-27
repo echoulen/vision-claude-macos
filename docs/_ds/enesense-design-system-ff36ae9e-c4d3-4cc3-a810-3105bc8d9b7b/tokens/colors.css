@@ -1,0 +1,100 @@
+/* ============================================================
+   EneSense — Color Tokens
+   Source of truth: cems-ui/src/core/theme/lightTheme.ts (active MUI theme)
+   Two layers:
+     1. Base palette     — raw brand ramps (--c-*)
+     2. Semantic aliases — role-based tokens (--color-*, --surface-*, --text-*)
+   ============================================================ */
+
+:root {
+  /* ---- Primary / Brand blue (MUI `primary`, identical to chart `c1`) ---- */
+  --c-primary-container: #e8ecfc;
+  --c-primary-100: #cfdafa;
+  --c-primary-200: #a6c4ff;
+  --c-primary-light: #86abf1;
+  --c-primary-400: #5f8ee8;
+  --c-primary-main: #4383e4;   /* ← the EneSense blue */
+  --c-primary-600: #3d7be1;
+  --c-primary-700: #3470dd;
+  --c-primary-800: #2c66d9;
+  --c-primary-dark: #0f57c2;
+  --c-primary-contrast: #ffffff;
+
+  /* ---- Chart / Data-viz series (c1–c7). c1 == primary blue. ----
+     Each series carries a full container→dark ramp so charts, chips,
+     and status pills can pick a tint + a readable text shade.        */
+  --c-c1-container: #e8ecfc; --c-c1-light: #86abf1; --c-c1-main: #4383e4; --c-c1-dark: #0f57c2;   /* Blue   */
+  --c-c2-container: #efe5ff; --c-c2-light: #c788f1; --c-c2-main: #b053ea; --c-c2-dark: #5000b6;   /* Purple */
+  --c-c3-container: #fef4e9; --c-c3-light: #f3d0a9; --c-c3-main: #ebb170; --c-c3-dark: #a96800;   /* Sand   */
+  --c-c4-container: #f8fbe4; --c-c4-light: #d6e962; --c-c4-main: #c4df1f; --c-c4-dark: #528500;   /* Lime   */
+  --c-c5-container: #e8f8fe; --c-c5-light: #86ddf9; --c-c5-main: #52cff6; --c-c5-dark: #138de4;   /* Sky    */
+  --c-c6-container: #e5f8f5; --c-c6-light: #66e5d6; --c-c6-main: #19cbb6; --c-c6-dark: #07505a;   /* Teal   */
+  --c-c7-container: #fdf0e6; --c-c7-light: #f2ad70; --c-c7-main: #ff811a; --c-c7-dark: #852101;   /* Orange */
+
+  /* full ramps for the two most-used series (primary already above) */
+  --c-c2-100: #e5d0ff; --c-c2-200: #d7aff9; --c-c2-400: #bc6fef; --c-c2-600: #983edd; --c-c2-700: #8029d0; --c-c2-800: #6613c2;
+  --c-c6-100: #cefbf5; --c-c6-200: #9ff8ed; --c-c6-400: #44d7c4; --c-c6-600: #14ab9d; --c-c6-700: #108d87; --c-c6-800: #0c6f71;
+  --c-c7-100: #ffdbba; --c-c7-200: #f5c397; --c-c7-400: #f7984a; --c-c7-600: #e46912; --c-c7-700: #c7560f; --c-c7-800: #ac4409;
+
+  /* ---- Semantic status ---- */
+  --c-warning-container: #fdf0e6;
+  --c-warning-light: #f2ad70;
+  --c-warning-main: #ff811a;
+  --c-warning-dark: #852101;
+  --c-error-container: #feeceb;
+  --c-error-light: #ff2d55;
+  --c-error-main: #ff675e;
+  --c-error-dark: #bf2c21;
+  --c-success-container: #e5f8f5;  /* derived from teal series for "ok/charging" */
+  --c-success-main: #19cbb6;
+  --c-success-dark: #07505a;
+
+  /* ---- Neutral grey ramp (MUI greys) ---- */
+  --c-grey-50: #fafafa;
+  --c-grey-100: #f5f5f5;
+  --c-grey-200: #eeeeee;
+  --c-grey-300: #e0e0e0;
+  --c-grey-400: #bdbdbd;
+  --c-grey-500: #9e9e9e;
+  --c-grey-600: #757575;
+  --c-grey-700: #616161;
+  --c-grey-800: #424242;
+  --c-grey-900: #212121;
+  --c-white: #ffffff;
+  --c-black: #000000;
+
+  /* ====================================================
+     SEMANTIC ALIASES — prefer these in product code
+     ==================================================== */
+
+  /* Text */
+  --text-primary: #1e232a;          /* near-black, body + headings   */
+  --text-secondary: #757575;        /* captions, labels, helper text */
+  --text-tertiary: #2f4260;         /* muted navy, nav + metadata    */
+  --text-disabled: rgba(0, 0, 0, 0.25);
+  --text-on-primary: #ffffff;       /* text/icons on blue fills      */
+  --text-link: var(--c-primary-main);
+
+  /* Surfaces & backgrounds */
+  --surface-app: #d8e3f3;           /* the app canvas (cool blue-grey) */
+  --surface-card: #ffffff;          /* cards, paper, modals            */
+  --surface-titlebar: #ffffff;
+  --surface-neutral: #f8f9fb;       /* zebra rows, inset wells         */
+  --surface-chart: #f2f3f5;         /* chart plot background           */
+
+  /* Borders & dividers */
+  --border-default: #e4e8ed;        /* `other.outliner` — input + card hairlines */
+  --border-divider: #d0d7e2;        /* list/section dividers                     */
+  --border-strong: rgba(15, 30, 52, 0.4);
+  --border-focus: var(--c-primary-main);
+
+  /* Interaction states (overlay on top of base color) */
+  --state-hover: rgba(67, 131, 228, 0.08);
+  --state-selected: rgba(67, 131, 228, 0.12);
+  --state-ripple: rgba(67, 131, 228, 0.3);
+  --state-disabled: rgba(0, 0, 0, 0.25);
+
+  /* Brand shortcuts */
+  --brand-blue: var(--c-primary-main);
+  --brand-ink: #231916;             /* wordmark ink (EneSense / NextDrive logos) */
+}

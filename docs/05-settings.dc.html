@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="05 · Settings (Sci-Fi HUD)" description="vision-claude 設定 — 科幻 HUD 版：瀏覽器配對入口（點擊開啟說明視窗 + 連到本地 pair 頁按鈕）+ Server/Token 表單" -->
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/radius-elevation.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/styles.css">
+  <script src="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/_ds_bundle.js"></script>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+    :root{ --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; }
+    body{ margin:0; font-family:var(--font-sans); -webkit-font-smoothing:antialiased; }
+    a{ color:#5AA9FF; } a:hover{ color:#8CC3FF; }
+    @keyframes vc-grid{ from{ background-position:0 0 } to{ background-position:0 60px } }
+    @keyframes vc-scan{ 0%{ transform:translateY(-90px); opacity:0 } 10%{ opacity:.5 } 90%{ opacity:.5 } 100%{ transform:translateY(680px); opacity:0 } }
+    @keyframes vc-boot{ 0%{ opacity:0; transform:translateY(10px) } 60%{ opacity:1 } 100%{ opacity:1; transform:translateY(0) } }
+    @keyframes vc-modalin{ 0%{ opacity:0; transform:translateY(14px) scale(.97) } 60%{ opacity:1 } 100%{ opacity:1; transform:translateY(0) scale(1) } }
+    @keyframes vc-orb{ 0%,100%{ box-shadow:0 0 0 0 rgba(90,169,255,.5), 0 0 16px 3px rgba(90,169,255,.6) } 50%{ box-shadow:0 0 0 12px rgba(90,169,255,0), 0 0 22px 5px rgba(90,169,255,.85) } }
+  </style>
+</helmet>
+
+<div style="min-height:100vh; padding:56px 40px 130px; box-sizing:border-box; font-family:var(--font-sans); color:#DCE8FA;
+            background:radial-gradient(ellipse 900px 500px at 50% -6%, rgba(67,131,228,.16), transparent 60%), radial-gradient(ellipse 700px 500px at 80% 110%, rgba(25,203,182,.1), transparent 60%), linear-gradient(180deg,#05070C,#03040a);">
+
+  <div style="max-width:1560px; margin:0 auto 8px;">
+    <div style="display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;">
+      <span style="font:800 28px/1.2 var(--font-sans); color:#EAF2FF; letter-spacing:-.01em; white-space:nowrap; text-shadow:0 0 18px rgba(90,169,255,.5);">Settings</span>
+      <span style="font:600 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:#5AA9FF; background:rgba(90,169,255,.1); border:1px solid rgba(90,169,255,.35); padding:5px 11px; border-radius:100px; white-space:nowrap;">SCI-FI HUD · SettingsView.swift</span>
+    </div>
+    <p style="margin:10px 0 0; font:400 15px/1.6 var(--font-sans); color:rgba(220,232,250,.6); max-width:760px;">The simplest single-page sheet. Tapping "Pair via browser" opens an explainer dialog with a one-tap button to the local pairing page; manual entry is below.</p>
+  </div>
+
+  <div style="position:relative; max-width:1560px; margin:30px auto 0; display:flex; justify-content:center;">
+    <div style="position:relative; width:640px; max-width:94vw; padding:56px 50px; border-radius:24px; overflow:hidden; display:flex; justify-content:center;
+                background:radial-gradient(ellipse 520px 360px at 50% -12%, rgba(67,131,228,.26), transparent 55%), linear-gradient(180deg,#070b14,#04060c);">
+      <div style="position:absolute; left:-30%; right:-30%; bottom:0; height:44%; pointer-events:none; background-image:linear-gradient(rgba(90,169,255,.38) 1px, transparent 1px), linear-gradient(90deg, rgba(90,169,255,.2) 1px, transparent 1px); background-size:56px 56px, 56px 56px; transform:perspective(300px) rotateX(72deg); transform-origin:bottom center; -webkit-mask-image:linear-gradient(0deg,#000,transparent 78%); mask-image:linear-gradient(0deg,#000,transparent 78%); animation:vc-grid 4s linear infinite;"></div>
+      <div style="position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg, transparent, rgba(90,169,255,.8), transparent);"></div>
+
+      <div style="position:relative; width:460px; max-width:100%; border-radius:18px; overflow:hidden; display:flex; flex-direction:column;
+                  background:linear-gradient(160deg, rgba(16,27,45,.86), rgba(7,12,22,.82)); border:1px solid rgba(90,169,255,.38);
+                  box-shadow:0 30px 80px -20px rgba(0,0,0,.8), 0 0 60px -12px rgba(67,131,228,.5), inset 0 0 70px -30px rgba(90,169,255,.4); color:#DCE8FA;">
+        <div style="position:absolute; inset:0; pointer-events:none; z-index:2; background-image:repeating-linear-gradient(0deg, rgba(120,180,255,.05) 0 1px, transparent 1px 3px);"></div>
+        <div style="position:absolute; left:0; right:0; top:0; height:80px; pointer-events:none; z-index:3; background:linear-gradient(180deg, transparent, rgba(90,169,255,.16), transparent); animation:vc-scan 6s ease-in-out infinite;"></div>
+        <div style="position:absolute; top:9px; left:9px; width:18px; height:18px; border-top:2px solid #5AA9FF; border-left:2px solid #5AA9FF; border-radius:4px 0 0 0; box-shadow:-1px -1px 8px -1px rgba(90,169,255,.7); z-index:4;"></div>
+        <div style="position:absolute; top:9px; right:9px; width:18px; height:18px; border-top:2px solid #5AA9FF; border-right:2px solid #5AA9FF; border-radius:0 4px 0 0; box-shadow:1px -1px 8px -1px rgba(90,169,255,.7); z-index:4;"></div>
+        <div style="position:absolute; bottom:9px; left:9px; width:18px; height:18px; border-bottom:2px solid #5AA9FF; border-left:2px solid #5AA9FF; border-radius:0 0 0 4px; box-shadow:-1px 1px 8px -1px rgba(90,169,255,.7); z-index:4;"></div>
+        <div style="position:absolute; bottom:9px; right:9px; width:18px; height:18px; border-bottom:2px solid #5AA9FF; border-right:2px solid #5AA9FF; border-radius:0 0 4px 0; box-shadow:1px 1px 8px -1px rgba(90,169,255,.7); z-index:4;"></div>
+
+        <div style="position:relative; z-index:5; flex-shrink:0; padding:22px 24px 14px; border-bottom:1px solid rgba(90,169,255,.2);">
+          <div style="font:700 10px/1 var(--font-mono); letter-spacing:.22em; text-transform:uppercase; color:#5AA9FF; margin-bottom:8px;">SETTINGS</div>
+          <span style="font:800 23px/1.2 var(--font-sans); color:#EAF2FF; letter-spacing:-.01em;">Settings</span>
+        </div>
+
+        <div style="position:relative; z-index:5; padding:22px 24px 26px; display:flex; flex-direction:column; gap:18px;">
+
+          <div onClick="{{openPair}}" style="display:flex; align-items:center; gap:12px; padding:15px 16px; border-radius:13px; background:rgba(90,169,255,.16); border:1px solid rgba(90,169,255,.4); cursor:pointer; box-shadow:0 0 24px -6px rgba(90,169,255,.55); animation:vc-boot .5s ease both;">
+            <span style="width:38px; height:38px; border-radius:10px; background:rgba(90,169,255,.24); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 0 14px -3px rgba(90,169,255,.7);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#BFD9FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"></path><path d="M20 4L10 14"></path><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"></path></svg></span>
+            <div style="flex:1; min-width:0;">
+              <div style="font:700 15.5px/1.3 var(--font-sans); color:#EAF2FF;">Pair via browser</div>
+              <div style="font:400 12px/1.3 var(--font-mono); color:rgba(190,217,255,.55);">Recommended · no manual entry</div>
+            </div>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8CC3FF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:10px;"><span style="flex:1; height:1px; background:rgba(90,169,255,.18);"></span><span style="font:600 10px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:rgba(140,195,255,.5);">Or enter manually</span><span style="flex:1; height:1px; background:rgba(90,169,255,.18);"></span></div>
+
+          <div style="animation:vc-boot .5s ease .1s both;">
+            <div style="font:600 10px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:rgba(140,195,255,.6); margin-bottom:8px;">SERVER ADDRESS</div>
+            <div style="display:flex; align-items:center; gap:8px; border:1px solid rgba(90,169,255,.28); background:rgba(6,12,22,.6); border-radius:9px; padding:11px 13px; box-shadow:inset 0 0 20px -14px rgba(90,169,255,.6);">
+              <span style="width:6px; height:6px; border-radius:50%; background:#3EE2C9; box-shadow:0 0 6px 1px rgba(62,226,201,.8); flex-shrink:0;"></span>
+              <span style="flex:1; font:400 15px/1.4 var(--font-mono); color:#EAF2FF;">http://172.18.0.105:8790</span>
+            </div>
+          </div>
+
+          <div style="animation:vc-boot .5s ease .18s both;">
+            <div style="font:600 10px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:rgba(140,195,255,.6); margin-bottom:8px;">TOKEN</div>
+            <div style="display:flex; align-items:center; gap:8px; border:1px solid rgba(90,169,255,.28); background:rgba(6,12,22,.6); border-radius:9px; padding:11px 13px; box-shadow:inset 0 0 20px -14px rgba(90,169,255,.6);">
+              <span style="flex:1; font:400 15px/1.4 var(--font-mono); color:#EAF2FF; letter-spacing:2px;">••••••••••</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(140,195,255,.6)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </div>
+          </div>
+
+          <div style="height:52px; border-radius:11px; background:linear-gradient(180deg,#5AA9FF,#2F6FD6); display:flex; align-items:center; justify-content:center; font:700 15px/1 var(--font-sans); color:#fff; box-shadow:0 0 24px -4px rgba(90,169,255,.85), inset 0 1px 0 rgba(255,255,255,.35); margin-top:4px; animation:vc-boot .5s ease .26s both;">Save & connect</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 瀏覽器配對 · 說明視窗 ===== -->
+    <sc-if value="{{pairOpen}}" hint-placeholder-val="{{true}}">
+      <div onClick="{{closePair}}" style="position:absolute; inset:0; z-index:20; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(3,5,10,.72); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);">
+        <div onClick="{{stop}}" style="position:relative; width:460px; max-width:100%; border-radius:18px; overflow:hidden; padding:26px 26px 24px;
+                    background:linear-gradient(160deg, rgba(18,30,50,.96), rgba(7,12,22,.94)); border:1px solid rgba(90,169,255,.45);
+                    box-shadow:0 34px 90px -18px rgba(0,0,0,.85), 0 0 60px -10px rgba(67,131,228,.6), inset 0 0 70px -32px rgba(90,169,255,.5);
+                    color:#DCE8FA; animation:vc-modalin .5s cubic-bezier(.2,.7,.2,1) both;">
+          <div style="position:absolute; inset:0; pointer-events:none; background-image:repeating-linear-gradient(0deg, rgba(120,180,255,.05) 0 1px, transparent 1px 3px);"></div>
+          <div style="position:absolute; top:9px; left:9px; width:18px; height:18px; border-top:2px solid #5AA9FF; border-left:2px solid #5AA9FF; border-radius:4px 0 0 0; box-shadow:-1px -1px 8px -1px rgba(90,169,255,.7);"></div>
+          <div style="position:absolute; top:9px; right:9px; width:18px; height:18px; border-top:2px solid #5AA9FF; border-right:2px solid #5AA9FF; border-radius:0 4px 0 0; box-shadow:1px -1px 8px -1px rgba(90,169,255,.7);"></div>
+          <div style="position:absolute; bottom:9px; left:9px; width:18px; height:18px; border-bottom:2px solid #5AA9FF; border-left:2px solid #5AA9FF; border-radius:0 0 0 4px; box-shadow:-1px 1px 8px -1px rgba(90,169,255,.7);"></div>
+          <div style="position:absolute; bottom:9px; right:9px; width:18px; height:18px; border-bottom:2px solid #5AA9FF; border-right:2px solid #5AA9FF; border-radius:0 0 4px 0; box-shadow:1px 1px 8px -1px rgba(90,169,255,.7);"></div>
+
+          <!-- header -->
+          <div style="position:relative; display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+            <span style="width:42px; height:42px; border-radius:11px; background:rgba(90,169,255,.18); border:1px solid rgba(90,169,255,.45); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 0 16px -4px rgba(90,169,255,.7); animation:vc-orb 2.6s ease-in-out infinite;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#BFD9FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"></path><path d="M20 4L10 14"></path><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"></path></svg>
+            </span>
+            <div style="flex:1; min-width:0;">
+              <div style="font:700 10px/1 var(--font-mono); letter-spacing:.2em; text-transform:uppercase; color:#5AA9FF; margin-bottom:5px;">◇ Pair via browser · HOW IT WORKS</div>
+              <span style="font:700 18px/1.3 var(--font-sans); color:#EAF2FF;">Pair via browser</span>
+            </div>
+            <span onClick="{{closePair}}" style="width:30px; height:30px; border-radius:8px; border:1px solid rgba(140,195,255,.28); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(190,217,255,.7)" stroke-width="2.2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg>
+            </span>
+          </div>
+
+          <!-- explanation -->
+          <p style="position:relative; margin:0 0 16px; font:400 14px/1.7 var(--font-sans); color:rgba(220,232,250,.72);">Open the local pairing page in a browser on this Mac — it auto-fills the server address and token, so you don't have to type anything. Tap "Open in App" on that page to connect your Vision Pro to this Mac.</p>
+
+          <!-- steps -->
+          <div style="position:relative; display:flex; flex-direction:column; gap:10px; margin-bottom:18px;">
+            <div style="display:flex; align-items:flex-start; gap:11px;">
+              <span style="width:22px; height:22px; border-radius:7px; background:rgba(90,169,255,.16); border:1px solid rgba(90,169,255,.4); display:flex; align-items:center; justify-content:center; flex-shrink:0; font:700 11px/1 var(--font-mono); color:#8CC3FF;">1</span>
+              <span style="font:400 13.5px/1.5 var(--font-sans); color:rgba(220,232,250,.8);">Open the pairing page below in a browser on this Mac.</span>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:11px;">
+              <span style="width:22px; height:22px; border-radius:7px; background:rgba(90,169,255,.16); border:1px solid rgba(90,169,255,.4); display:flex; align-items:center; justify-content:center; flex-shrink:0; font:700 11px/1 var(--font-mono); color:#8CC3FF;">2</span>
+              <span style="font:400 13.5px/1.5 var(--font-sans); color:rgba(220,232,250,.8);">The page auto-detects the server and token — tap "Open in App".</span>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:11px;">
+              <span style="width:22px; height:22px; border-radius:7px; background:rgba(90,169,255,.16); border:1px solid rgba(90,169,255,.4); display:flex; align-items:center; justify-content:center; flex-shrink:0; font:700 11px/1 var(--font-mono); color:#8CC3FF;">3</span>
+              <span style="font:400 13.5px/1.5 var(--font-sans); color:rgba(220,232,250,.8);">Back in the app, confirm the connection and you're done — no typing required.</span>
+            </div>
+          </div>
+
+          <!-- note -->
+          <div style="position:relative; display:flex; align-items:flex-start; gap:9px; background:rgba(25,203,182,.08); border:1px solid rgba(62,226,201,.28); border-radius:10px; padding:10px 12px; margin-bottom:18px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3EE2C9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="11" x2="12" y2="16"></line><circle cx="12" cy="8" r="1" fill="#3EE2C9" stroke="none"></circle></svg>
+            <span style="font:400 12.5px/1.55 var(--font-sans); color:rgba(190,230,222,.8);">Make sure your Vision Pro and this Mac are on the same Wi-Fi network, and the vision-claude server is running.</span>
+          </div>
+
+          <!-- primary action: open local pair page -->
+          <a href="http://127.0.0.1:8790/pair" target="_blank" rel="noopener" style="position:relative; text-decoration:none; height:54px; border-radius:12px; background:linear-gradient(180deg,#5AA9FF,#2F6FD6); display:flex; align-items:center; justify-content:center; gap:9px; box-shadow:0 0 26px -4px rgba(90,169,255,.85), inset 0 1px 0 rgba(255,255,255,.4);">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"></path><path d="M20 4L10 14"></path><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"></path></svg>
+            <span style="font:700 15.5px/1 var(--font-sans); color:#fff;">Open pairing page</span>
+          </a>
+          <div style="position:relative; text-align:center; margin-top:9px; font:500 12px/1.4 var(--font-mono); color:rgba(140,195,255,.6);">127.0.0.1:8790/pair</div>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { pairOpen: true };
+  renderVals() {
+    return {
+      pairOpen: this.state.pairOpen,
+      openPair: () => this.setState({ pairOpen: true }),
+      closePair: () => this.setState({ pairOpen: false }),
+      stop: (e) => e.stopPropagation(),
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="06 · Pair Web (Sci-Fi)" description="vision-claude 配對連線 — 瀏覽器端頁面，科幻深色網頁風（非玻璃、非 App）" -->
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/radius-elevation.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/styles.css">
+  <script src="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/_ds_bundle.js"></script>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+    :root{ --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; }
+    body{ margin:0; font-family:var(--font-sans); -webkit-font-smoothing:antialiased; }
+    a{ color:#5AA9FF; } a:hover{ color:#8CC3FF; }
+    @keyframes vc-grid{ from{ background-position:0 0 } to{ background-position:0 60px } }
+    @keyframes vc-boot{ 0%{ opacity:0; transform:translateY(12px) } 60%{ opacity:1 } 100%{ opacity:1; transform:translateY(0) } }
+    @keyframes vc-orb{ 0%,100%{ box-shadow:0 0 0 0 rgba(90,169,255,.5), 0 0 16px 3px rgba(90,169,255,.6) } 50%{ box-shadow:0 0 0 12px rgba(90,169,255,0), 0 0 22px 5px rgba(90,169,255,.85) } }
+  </style>
+</helmet>
+
+<div style="min-height:100vh; padding:56px 40px 120px; box-sizing:border-box; font-family:var(--font-sans); color:#DCE8FA;
+            background:radial-gradient(circle at 1px 1px, rgba(90,169,255,.05) 1px, transparent 0) 0 0/26px 26px, radial-gradient(ellipse 900px 500px at 50% -6%, rgba(67,131,228,.14), transparent 60%), linear-gradient(180deg,#05070C,#03040a);">
+
+  <div style="max-width:1560px; margin:0 auto 8px;">
+    <div style="display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;">
+      <span style="font:800 28px/1.2 var(--font-sans); color:#EAF2FF; letter-spacing:-.01em; white-space:nowrap; text-shadow:0 0 18px rgba(90,169,255,.5);">Pairing — web page</span>
+      <span style="font:600 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:#5AA9FF; background:rgba(90,169,255,.1); border:1px solid rgba(90,169,255,.35); padding:5px 11px; border-radius:100px; white-space:nowrap;">pair.html · regular web page</span>
+    </div>
+    <p style="margin:10px 0 0; font:400 15px/1.6 var(--font-sans); color:rgba(220,232,250,.6); max-width:780px;">A regular web page opened in Safari/desktop browsers — carries over the sci-fi dark theme and accent color, but skips the app's HUD panel details (no corner brackets, no perspective grid floor), keeping the "this is a web page, not the app" distinction clear. Previewed below at narrow and desktop-wide widths.</p>
+  </div>
+
+  <div style="max-width:1560px; margin:30px auto 0; display:flex; gap:30px; flex-wrap:wrap; justify-content:center; align-items:flex-start;">
+
+    <!-- NARROW -->
+    <div>
+      <div style="text-align:center; margin-bottom:12px; font:700 11px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:rgba(140,195,255,.6);">Narrow window (≈ 430px)</div>
+      <div style="width:430px; max-width:92vw; height:760px; overflow:hidden; border-radius:18px; border:1px solid rgba(90,169,255,.22); box-shadow:0 30px 70px -22px rgba(0,0,0,.8);
+                  background:radial-gradient(ellipse 400px 300px at 50% 0%, rgba(67,131,228,.14), transparent 60%), linear-gradient(180deg,#0a0e17,#070a12);">
+        <div style="height:100%; overflow:hidden; display:flex; flex-direction:column; align-items:center; padding:36px 24px; box-sizing:border-box;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:32px;">
+            <span style="width:9px; height:9px; border-radius:50%; background:#5AA9FF; box-shadow:0 0 8px 1px rgba(90,169,255,.9);"></span>
+            <span style="font:700 16px/1 var(--font-sans); color:#EAF2FF; letter-spacing:-.01em;">vision-claude</span>
+          </div>
+
+          <div style="width:100%; border-radius:18px; border:1px solid rgba(90,169,255,.28); background:linear-gradient(160deg, rgba(16,27,45,.7), rgba(9,14,24,.7)); box-shadow:0 0 50px -16px rgba(67,131,228,.5); padding:28px 22px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; animation:vc-boot .5s ease both;">
+            <span style="width:52px; height:52px; border-radius:50%; background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.4); display:flex; align-items:center; justify-content:center; margin-bottom:6px; animation:vc-orb 2.6s ease-in-out infinite;">
+              <x-import component-from-global-scope="EneSenseDesignSystem_ff36ae.Icon" name="Device" size="24" color="#8CC3FF" hint-size="24px,24px"></x-import>
+            </span>
+            <span style="font:700 19px/1.4 var(--font-sans); color:#EAF2FF;">Connect to Carlos's Mac mini</span>
+            <span style="font:400 14px/1.6 var(--font-sans); color:rgba(190,217,255,.6); margin-bottom:6px;">The vision-claude server on this Mac is ready</span>
+
+            <div style="width:100%; background:rgba(6,12,22,.55); border:1px solid rgba(90,169,255,.2); border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; gap:8px; text-align:left; margin:8px 0 6px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;"><span style="font:500 11px/1 var(--font-mono); letter-spacing:.06em; color:rgba(140,195,255,.55); flex-shrink:0;">HOST</span><span style="font:600 12px/1.3 var(--font-mono); color:#EAF2FF; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Carlos-Mac-mini.local</span></div>
+              <div style="height:1px; background:rgba(90,169,255,.14);"></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;"><span style="font:500 11px/1 var(--font-mono); letter-spacing:.06em; color:rgba(140,195,255,.55); flex-shrink:0;">LAN</span><span style="font:600 12px/1.3 var(--font-mono); color:#EAF2FF;">172.18.0.105:8790</span></div>
+            </div>
+
+            <div style="width:100%; height:54px; border-radius:12px; background:linear-gradient(180deg,#5AA9FF,#2F6FD6); display:flex; align-items:center; justify-content:center; gap:8px; margin-top:8px; box-shadow:0 0 24px -4px rgba(90,169,255,.8), inset 0 1px 0 rgba(255,255,255,.35);">
+              <span style="font:700 16px/1 var(--font-sans); color:#fff;">Open in App</span>
+              <x-import component-from-global-scope="EneSenseDesignSystem_ff36ae.Icon" name="ArrowForward" size="16" color="#fff" hint-size="16px,16px"></x-import>
+            </div>
+            <span style="font:400 12px/1.6 var(--font-sans); color:rgba(190,217,255,.45); margin-top:10px;">Nothing happening? Make sure the VisionClaude app is installed and your Vision Pro is on the same Wi-Fi as this Mac.</span>
+          </div>
+
+          <span style="flex:1;"></span>
+          <span style="font:400 11px/1 var(--font-mono); letter-spacing:.1em; color:rgba(140,195,255,.3); margin-top:24px;">vision-claude · local pairing page</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WIDE -->
+    <div>
+      <div style="text-align:center; margin-bottom:12px; font:700 11px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:rgba(140,195,255,.6);">Desktop wide (≈ 1080px)</div>
+      <div style="width:1080px; max-width:92vw; height:760px; overflow:hidden; border-radius:18px; border:1px solid rgba(90,169,255,.22); box-shadow:0 30px 70px -22px rgba(0,0,0,.8);
+                  background:radial-gradient(ellipse 700px 380px at 50% 0%, rgba(67,131,228,.16), transparent 60%), radial-gradient(circle at 1px 1px, rgba(90,169,255,.05) 1px, transparent 0) 0 0/30px 30px, linear-gradient(180deg,#0a0e17,#070a12);">
+        <div style="height:100%; overflow:hidden; display:flex; flex-direction:column; align-items:center; padding:52px 24px; box-sizing:border-box;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:40px;">
+            <span style="width:10px; height:10px; border-radius:50%; background:#5AA9FF; box-shadow:0 0 8px 1px rgba(90,169,255,.9);"></span>
+            <span style="font:700 18px/1 var(--font-sans); color:#EAF2FF; letter-spacing:-.01em;">vision-claude</span>
+          </div>
+
+          <div style="width:460px; max-width:100%; border-radius:20px; border:1px solid rgba(90,169,255,.28); background:linear-gradient(160deg, rgba(16,27,45,.7), rgba(9,14,24,.7)); box-shadow:0 0 60px -16px rgba(67,131,228,.55); padding:34px 30px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; animation:vc-boot .5s ease both;">
+            <span style="width:56px; height:56px; border-radius:50%; background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.4); display:flex; align-items:center; justify-content:center; margin-bottom:6px; animation:vc-orb 2.6s ease-in-out infinite;">
+              <x-import component-from-global-scope="EneSenseDesignSystem_ff36ae.Icon" name="Device" size="26" color="#8CC3FF" hint-size="26px,26px"></x-import>
+            </span>
+            <span style="font:700 21px/1.4 var(--font-sans); color:#EAF2FF;">Connect to Carlos's Mac mini</span>
+            <span style="font:400 15px/1.6 var(--font-sans); color:rgba(190,217,255,.6); margin-bottom:6px;">The vision-claude server on this Mac is ready</span>
+
+            <div style="width:100%; background:rgba(6,12,22,.55); border:1px solid rgba(90,169,255,.2); border-radius:12px; padding:14px 16px; display:flex; flex-direction:column; gap:9px; text-align:left; margin:10px 0 8px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;"><span style="font:500 12px/1 var(--font-mono); letter-spacing:.06em; color:rgba(140,195,255,.55); flex-shrink:0;">HOST</span><span style="font:600 13.5px/1.3 var(--font-mono); color:#EAF2FF;">Carlos-Mac-mini.local</span></div>
+              <div style="height:1px; background:rgba(90,169,255,.14);"></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;"><span style="font:500 12px/1 var(--font-mono); letter-spacing:.06em; color:rgba(140,195,255,.55); flex-shrink:0;">LAN</span><span style="font:600 13.5px/1.3 var(--font-mono); color:#EAF2FF;">172.18.0.105:8790</span></div>
+            </div>
+
+            <div style="width:100%; height:56px; border-radius:12px; background:linear-gradient(180deg,#5AA9FF,#2F6FD6); display:flex; align-items:center; justify-content:center; gap:8px; margin-top:8px; box-shadow:0 0 24px -4px rgba(90,169,255,.8), inset 0 1px 0 rgba(255,255,255,.35); cursor:pointer;">
+              <span style="font:700 16px/1 var(--font-sans); color:#fff;">Open in App</span>
+              <x-import component-from-global-scope="EneSenseDesignSystem_ff36ae.Icon" name="ArrowForward" size="16" color="#fff" hint-size="16px,16px"></x-import>
+            </div>
+            <span style="font:400 12.5px/1.6 var(--font-sans); color:rgba(190,217,255,.45); margin-top:10px;">Nothing happening? Make sure the VisionClaude app is installed and your Vision Pro is on the same Wi-Fi as this Mac.</span>
+          </div>
+
+          <span style="flex:1;"></span>
+          <span style="font:400 12px/1 var(--font-mono); letter-spacing:.1em; color:rgba(140,195,255,.3); margin-top:32px;">vision-claude · local pairing page</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="max-width:1120px; margin:34px auto 0; border-radius:12px; padding:18px 20px; background:rgba(120,180,255,.05); border:1px dashed rgba(90,169,255,.3);">
+    <div style="font:700 10px/1 var(--font-mono); text-transform:uppercase; letter-spacing:.2em; color:#5AA9FF; margin-bottom:8px;">◇ Design notes</div>
+    <div style="font:400 14px/1.6 var(--font-sans); color:rgba(190,217,255,.65);">Shares the sci-fi dark theme and accent blue with the app, but this is a browser web page: it uses a simple centered card with soft outer glow instead, skipping the app's corner-bracket HUD panels and grid floor, so users perceive "this is a web page." Tapping the button triggers the app's custom URL scheme, bringing up the confirmation card from screen 07.</div>
+  </div>
+
+</div>
+
+</x-dc>
+</body>
+</html>

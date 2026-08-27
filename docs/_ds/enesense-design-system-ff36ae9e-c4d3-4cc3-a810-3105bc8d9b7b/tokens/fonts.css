@@ -1,0 +1,10 @@
+/* ============================================================
+   EneSense — Webfonts
+   The product ships Inter (Latin) + Noto Sans TC / JP (CJK) and
+   selects the family per locale (zh-TW / ja / en / th).
+   These are the REAL product fonts — loaded here from Google Fonts.
+   If you self-host, replace the @import with local @font-face rules
+   pointing at your woff2 binaries (same family names).
+   ============================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..700&family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap");

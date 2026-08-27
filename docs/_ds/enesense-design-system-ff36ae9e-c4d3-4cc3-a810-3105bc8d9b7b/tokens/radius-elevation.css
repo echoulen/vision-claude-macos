@@ -1,0 +1,50 @@
+/* ============================================================
+   EneSense — Radius & Elevation Tokens
+   Radii observed in components: pill buttons (34px), pill tabs/switch
+   (100px), cards & modals (rounded-2xl = 16px), nav list rows (36px),
+   inputs (8px), full circles for avatars / info badges.
+   Shadows lean on a single soft card elevation (Tailwind shadow-xl)
+   plus a layered "float" used by the login card and popovers.
+   ============================================================ */
+
+:root {
+  /* ---- Border radius ---- */
+  --radius-none: 0;
+  --radius-xs: 4px;
+  --radius-sm: 8px;          /* inputs, small chips, menu items */
+  --radius-md: 12px;
+  --radius-lg: 16px;         /* cards, modals (rounded-2xl)     */
+  --radius-xl: 20px;         /* login card (borderRadius: 5)    */
+  --radius-row: 36px;        /* nav list buttons (borderRadius: 9) */
+  --radius-pill: 100px;      /* segmented tabs, switch track     */
+  --radius-button: 34px;     /* CommonButton                     */
+  --radius-full: 9999px;     /* avatars, icon badges             */
+
+  /* ---- Elevation / shadows ---- */
+  /* Card — Tailwind `shadow-xl`, the workhorse card lift */
+  --shadow-card:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+  /* Resting — subtle hairline lift for chips / inputs on hover */
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+
+  /* Popover / menu / dropdown */
+  --shadow-popover:
+    0 8px 24px rgba(28, 29, 65, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.06);
+
+  /* Float — the layered, very soft shadow on the login card */
+  --shadow-float:
+    0 25.078px 17.6px rgba(28, 29, 65, 0.0342537),
+    0 2px 6px rgba(0, 0, 0, 0.03),
+    0 3px 10px rgba(0, 0, 0, 0.03),
+    0 6px 17px rgba(0, 0, 0, 0.03);
+
+  /* ---- Motion ---- */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);    /* @kind other */
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);    /* @kind other */
+  --duration-fast: 150ms;                            /* @kind other */
+  --duration-base: 200ms;                            /* @kind other */
+  --duration-switch: 300ms; /* @kind other */ /* iOS switch thumb travel */
+}

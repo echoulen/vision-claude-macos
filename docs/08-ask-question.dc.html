@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/typography.css">
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+    :root{ --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; }
+    body{ margin:0; font-family:var(--font-sans); -webkit-font-smoothing:antialiased; }
+    a{ color:#5AA9FF; } a:hover{ color:#8CC3FF; }
+    input::placeholder{ color:rgba(190,217,255,.4); }
+    @keyframes vc-breathe{ 0%,100%{ opacity:1 } 50%{ opacity:.35 } }
+    @keyframes vc-scandrift{ from{ background-position:0 0 } to{ background-position:0 6px } }
+    @keyframes vc-grid{ from{ background-position:0 0 } to{ background-position:0 60px } }
+    @keyframes vc-flow{ 0%{ top:0; opacity:0 } 12%{ opacity:1 } 88%{ opacity:1 } 100%{ top:100%; opacity:0 } }
+    @keyframes vc-orb{ 0%,100%{ box-shadow:0 0 0 0 rgba(90,169,255,.55), 0 0 12px 2px rgba(90,169,255,.8) } 50%{ box-shadow:0 0 0 7px rgba(90,169,255,0), 0 0 18px 4px rgba(90,169,255,.9) } }
+    @keyframes vc-signal{ 0%,100%{ opacity:.4 } 50%{ opacity:1 } }
+  </style>
+</helmet>
+
+<div style="min-height:100vh; padding:56px 40px 120px; box-sizing:border-box; font-family:var(--font-sans); color:#DCE8FA;
+            background:radial-gradient(ellipse 900px 500px at 50% -6%, rgba(67,131,228,.16), transparent 60%), radial-gradient(ellipse 700px 500px at 80% 110%, rgba(25,203,182,.08), transparent 60%), linear-gradient(180deg,#05070C,#03040a);">
+
+  <!-- ============ DOC HEADER ============ -->
+  <div style="max-width:1200px; margin:0 auto 8px;">
+    <div style="display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;">
+      <span style="font:800 28px/1.2 var(--font-sans); color:#EAF2FF; letter-spacing:-.01em; white-space:nowrap; text-shadow:0 0 18px rgba(90,169,255,.5);">Ask Question Card</span>
+      <span style="font:600 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:#5AA9FF; background:rgba(90,169,255,.1); border:1px solid rgba(90,169,255,.35); padding:5px 11px; border-radius:100px;">AskUserQuestion · ChatView.swift</span>
+    </div>
+    <p style="margin:10px 0 0; font:400 15px/1.6 var(--font-sans); color:rgba(220,232,250,.6); max-width:760px;">The interactive menu card inserted into the conversation when Claude calls AskUserQuestion — it stays in the history just like any other message. It continues the HUD card language (corner brackets, thread line nodes), but uses the neutral informational hudBlue instead of the warm warning color reserved for permission approval. Actually clickable to answer; turns into a read-only summary after submitting.</p>
+  </div>
+
+  <!-- ============ SECTION ============ -->
+  <div style="max-width:1200px; margin:34px auto 16px; display:flex; align-items:center; gap:10px;">
+    <span style="font:700 11px/1 var(--font-mono); letter-spacing:.2em; text-transform:uppercase; color:#5AA9FF;">◇ Interactive menu inside the conversation (actually answerable)</span>
+    <span style="flex:1; height:1px; background:linear-gradient(90deg, rgba(90,169,255,.4), transparent);"></span>
+  </div>
+
+  <!-- ============ DEMO STATE CONTROL ============ -->
+  <div style="max-width:1200px; margin:0 auto 20px; display:flex; justify-content:center;">
+    <div style="display:inline-flex; align-items:center; gap:10px; padding:8px 10px 8px 14px; border-radius:100px; background:rgba(8,14,24,.7); border:1px dashed rgba(90,169,255,.4);">
+      <span style="font:700 9.5px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:rgba(140,195,255,.6);">DEMO STATE</span>
+      <div style="display:flex; gap:4px; padding:3px; border-radius:100px; background:rgba(6,12,22,.7); border:1px solid rgba(90,169,255,.22);">
+        <span onClick="{{goPending}}" style="font:600 11.5px/1 var(--font-mono); color:{{pendingTabColor}}; background:{{pendingTabBg}}; padding:7px 13px; border-radius:100px; cursor:pointer;">Pending</span>
+        <span onClick="{{goAnswered}}" style="font:600 11.5px/1 var(--font-mono); color:{{answeredTabColor}}; background:{{answeredTabBg}}; padding:7px 13px; border-radius:100px; cursor:pointer;">Answered</span>
+      </div>
+      <span onClick="{{goReset}}" style="display:inline-flex; align-items:center; gap:5px; font:600 11px/1 var(--font-mono); color:rgba(190,217,255,.55); padding:7px 11px; border-radius:100px; cursor:pointer; border:1px solid rgba(90,169,255,.2);">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(190,217,255,.6)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><polyline points="3 3 3 6 6 6"></polyline></svg>
+        Reset selections
+      </span>
+    </div>
+  </div>
+
+  <!-- ============ SCENE ============ -->
+  <div style="max-width:1200px; margin:0 auto; display:flex; justify-content:center;">
+    <div style="position:relative; width:960px; max-width:96vw; padding:56px 60px; border-radius:26px; overflow:hidden; display:flex; justify-content:center;
+                background:radial-gradient(ellipse 620px 460px at 50% 118%, rgba(25,203,182,.1), transparent 60%), linear-gradient(180deg,#070b14,#04060c);">
+      <!-- perspective grid floor -->
+      <div style="position:absolute; left:-30%; right:-30%; bottom:0; height:46%; pointer-events:none; z-index:0;
+                  background-image:linear-gradient(rgba(90,169,255,.34) 1px, transparent 1px), linear-gradient(90deg, rgba(90,169,255,.18) 1px, transparent 1px);
+                  background-size:60px 60px, 60px 60px;
+                  transform:perspective(320px) rotateX(72deg); transform-origin:bottom center;
+                  -webkit-mask-image:linear-gradient(0deg,#000,transparent 78%); mask-image:linear-gradient(0deg,#000,transparent 78%);
+                  animation:vc-grid 5s linear infinite;"></div>
+      <div style="position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg, transparent, rgba(90,169,255,.7), transparent); z-index:1;"></div>
+
+      <!-- ===================== HUD APP PANEL ===================== -->
+      <div style="position:relative; z-index:2; width:800px; max-width:100%; border-radius:18px; overflow:hidden; display:flex; flex-direction:column;
+                  background:linear-gradient(160deg, rgba(16,27,45,.9), rgba(7,12,22,.86));
+                  border:1px solid rgba(90,169,255,.36);
+                  box-shadow:0 30px 80px -20px rgba(0,0,0,.8), 0 0 60px -12px rgba(67,131,228,.45), inset 0 0 70px -34px rgba(90,169,255,.4);
+                  color:#DCE8FA;">
+
+        <!-- scanline texture -->
+        <div style="position:absolute; inset:0; pointer-events:none; z-index:3; background-image:repeating-linear-gradient(0deg, rgba(120,180,255,.045) 0 1px, transparent 1px 3px); animation:vc-scandrift 5s linear infinite;"></div>
+        <!-- corner brackets -->
+        <div style="position:absolute; top:9px; left:9px; width:20px; height:20px; border-top:2px solid #5AA9FF; border-left:2px solid #5AA9FF; border-radius:4px 0 0 0; box-shadow:-1px -1px 8px -1px rgba(90,169,255,.7); z-index:6;"></div>
+        <div style="position:absolute; top:9px; right:9px; width:20px; height:20px; border-top:2px solid #5AA9FF; border-right:2px solid #5AA9FF; border-radius:0 4px 0 0; box-shadow:1px -1px 8px -1px rgba(90,169,255,.7); z-index:6;"></div>
+        <div style="position:absolute; bottom:9px; left:9px; width:20px; height:20px; border-bottom:2px solid #5AA9FF; border-left:2px solid #5AA9FF; border-radius:0 0 0 4px; box-shadow:-1px 1px 8px -1px rgba(90,169,255,.7); z-index:6;"></div>
+        <div style="position:absolute; bottom:9px; right:9px; width:20px; height:20px; border-bottom:2px solid #5AA9FF; border-right:2px solid #5AA9FF; border-radius:0 0 4px 0; box-shadow:1px 1px 8px -1px rgba(90,169,255,.7); z-index:6;"></div>
+
+        <!-- ===== system header ===== -->
+        <div style="position:relative; z-index:5; flex-shrink:0; padding:18px 22px 13px; border-bottom:1px solid rgba(90,169,255,.2);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="min-width:0; flex:1;">
+              <div style="display:flex; align-items:center; gap:7px; margin-bottom:6px;">
+                <span style="width:6px; height:6px; border-radius:50%; background:#3EE2C9; box-shadow:0 0 8px 1px rgba(62,226,201,.9);"></span>
+                <span style="font:700 10px/1 var(--font-mono); letter-spacing:.22em; text-transform:uppercase; color:#5AA9FF;">CLAUDE CODE // SESSION</span>
+              </div>
+              <span style="font:600 15px/1.2 var(--font-mono); color:#EAF2FF; text-shadow:0 0 12px rgba(90,169,255,.4);">sess_8f2a1c4e9d</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="display:flex; align-items:flex-end; gap:2px; height:12px;">
+                  <span style="width:2.5px; height:5px; background:#3EE2C9; border-radius:1px; box-shadow:0 0 4px rgba(62,226,201,.8); animation:vc-signal 1.8s ease-in-out infinite;"></span>
+                  <span style="width:2.5px; height:8px; background:#3EE2C9; border-radius:1px; box-shadow:0 0 4px rgba(62,226,201,.8); animation:vc-signal 1.8s ease-in-out infinite .2s;"></span>
+                  <span style="width:2.5px; height:11px; background:#3EE2C9; border-radius:1px; box-shadow:0 0 4px rgba(62,226,201,.8); animation:vc-signal 1.8s ease-in-out infinite .4s;"></span>
+                </span>
+                <span style="font:600 11px/1 var(--font-mono); color:#3EE2C9; text-shadow:0 0 8px rgba(62,226,201,.6);">12ms</span>
+              </div>
+              <span style="width:1px; height:16px; background:rgba(90,169,255,.28);"></span>
+              <span style="display:inline-flex; align-items:center; gap:6px; font:600 11px/1 var(--font-mono); color:#8CC3FF; background:rgba(90,169,255,.12); border:1px solid rgba(90,169,255,.4); padding:5px 8px 5px 10px; border-radius:100px; white-space:nowrap; box-shadow:0 0 12px -2px rgba(90,169,255,.5);">
+                sonnet-4.5
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8CC3FF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </span>
+            </div>
+          </div>
+          <div style="margin-top:12px; display:flex; align-items:center; gap:8px;">
+            <span style="display:inline-flex; align-items:center; gap:6px; padding:6px 12px 6px 9px; border-radius:8px; background:rgba(90,169,255,.12); border:1px solid rgba(90,169,255,.4); box-shadow:0 0 14px -4px rgba(90,169,255,.5);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8CC3FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"></path></svg>
+              <span style="font:600 12px/1 var(--font-mono); color:#8CC3FF;">MANUAL</span>
+            </span>
+            <span style="display:inline-flex; align-items:center; gap:7px; padding:6px 12px 6px 10px; border-radius:8px; background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.4); font:600 12px/1 var(--font-mono); color:#8CC3FF; box-shadow:0 0 16px -3px rgba(90,169,255,.55);"><span style="width:7px;height:7px;border-radius:50%;background:#5AA9FF; box-shadow:0 0 8px 2px rgba(90,169,255,.9); animation:vc-breathe 1.5s ease-in-out infinite;"></span>{{statusLabel}}</span>
+          </div>
+        </div>
+
+        <!-- ===== transcript ===== -->
+        <div style="position:relative; z-index:4; padding:20px 22px; display:flex; flex-direction:column; gap:14px;">
+
+          <!-- user request -->
+          <div style="display:flex; justify-content:flex-end;">
+            <div style="max-width:80%; background:linear-gradient(160deg, rgba(90,169,255,.24), rgba(47,111,214,.16)); border:1px solid rgba(90,169,255,.5); border-radius:12px 12px 3px 12px; padding:11px 15px; font:400 15px/1.5 var(--font-sans); color:#EAF2FF; box-shadow:0 0 22px -8px rgba(90,169,255,.6), inset 0 0 20px -12px rgba(90,169,255,.6);">We just missed two more events after reconnecting. Please fix the WS reconnect compensation — check the direction with me before you start.</div>
+          </div>
+
+          <!-- assistant turn -->
+          <div style="position:relative;">
+            <div style="display:flex; align-items:center; gap:7px; margin:2px 0 8px 2px;">
+              <span style="width:14px; height:14px; border-radius:3px; border:1px solid rgba(62,226,201,.6); display:flex; align-items:center; justify-content:center; box-shadow:0 0 10px -2px rgba(62,226,201,.6);"><span style="width:5px; height:5px; border-radius:50%; background:#3EE2C9; box-shadow:0 0 6px 1px rgba(62,226,201,.9);"></span></span>
+              <span style="font:700 10px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:#3EE2C9;">CLAUDE</span>
+            </div>
+
+            <div style="background:rgba(120,180,255,.06); border:1px solid rgba(120,180,255,.18); border-left:2px solid #5AA9FF; border-radius:4px 12px 12px 4px; padding:12px 15px; font:400 15px/1.55 var(--font-sans); color:#DCE8FA; box-shadow:inset 0 0 30px -18px rgba(90,169,255,.6);">Got it. Before I touch <span style="font-family:var(--font-mono); background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.28); padding:1px 5px; border-radius:4px; font-size:13px; color:#BFD9FF;">SessionSocket</span>, there are two decisions I'd like to confirm with you first —</div>
+
+            <!-- ===== trace: AskUserQuestion node ===== -->
+            <div style="position:relative; margin-top:12px; padding-left:30px;">
+              <!-- thread line -->
+              <div style="position:absolute; left:9px; top:6px; bottom:14px; width:2px; border-radius:2px; background:linear-gradient(180deg, rgba(90,169,255,.7), rgba(90,169,255,.2)); box-shadow:0 0 8px rgba(90,169,255,.5);"></div>
+              <!-- flowing light (pending only) -->
+              <sc-if value="{{pending}}" hint-placeholder-val="{{true}}">
+                <div style="position:absolute; left:7px; top:0; width:6px; height:6px; border-radius:50%; background:#8CC3FF; box-shadow:0 0 10px 3px rgba(140,195,255,.9); animation:vc-flow 2.6s ease-in-out infinite;"></div>
+              </sc-if>
+              <!-- node -->
+              <sc-if value="{{pending}}" hint-placeholder-val="{{true}}">
+                <span style="position:absolute; left:-4px; top:14px; width:12px; height:12px; border-radius:50%; background:#5AA9FF; animation:vc-orb 1.8s ease-in-out infinite;"></span>
+              </sc-if>
+              <sc-if value="{{answered}}" hint-placeholder-val="{{false}}">
+                <span style="position:absolute; left:-4px; top:14px; width:12px; height:12px; border-radius:50%; background:#0a1220; border:2px solid #5AA9FF; box-sizing:border-box; box-shadow:0 0 8px -1px rgba(90,169,255,.7);"></span>
+              </sc-if>
+
+              <!-- ============ PENDING CARD ============ -->
+              <sc-if value="{{pending}}" hint-placeholder-val="{{true}}">
+                <div style="position:relative; border-radius:14px; overflow:hidden; padding:18px 18px 16px;
+                            background:linear-gradient(160deg, rgba(18,30,50,.92), rgba(9,15,26,.9));
+                            border:1px solid rgba(90,169,255,.5);
+                            box-shadow:0 20px 60px -22px rgba(0,0,0,.7), 0 0 44px -14px rgba(67,131,228,.5), inset 0 0 60px -32px rgba(90,169,255,.45);">
+                  <div style="position:absolute; inset:0; pointer-events:none; background-image:repeating-linear-gradient(0deg, rgba(120,180,255,.04) 0 1px, transparent 1px 3px);"></div>
+
+                  <!-- card header -->
+                  <div style="position:relative; display:flex; align-items:center; gap:11px; margin-bottom:14px;">
+                    <span style="width:34px; height:34px; border-radius:9px; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 16px -4px rgba(90,169,255,.6);">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8CC3FF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.2 9.2a2.8 2.8 0 0 1 5.5.8c0 1.9-2.7 2.4-2.7 2.4"></path><path d="M12 17h.01"></path></svg>
+                    </span>
+                    <div style="flex:1; min-width:0;">
+                      <div style="font:700 9.5px/1 var(--font-mono); letter-spacing:.2em; text-transform:uppercase; color:#5AA9FF; margin-bottom:5px;">ASKUSERQUESTION · AWAITING YOUR CHOICE</div>
+                      <span style="font:700 16px/1.3 var(--font-sans); color:#EAF2FF; text-shadow:0 0 12px rgba(90,169,255,.35);">Claude wants you to make a few decisions</span>
+                    </div>
+                    <span style="flex-shrink:0; font:600 11px/1 var(--font-mono); color:#8CC3FF; background:rgba(90,169,255,.12); border:1px solid rgba(90,169,255,.4); padding:6px 10px; border-radius:100px;">2 questions</span>
+                  </div>
+
+                  <!-- question groups -->
+                  <div style="position:relative; display:flex; flex-direction:column; gap:12px;">
+                    <sc-for list="{{groups}}" as="grp" hint-placeholder-count="2">
+                      <div style="border-radius:12px; padding:14px; background:rgba(8,13,24,.5); border:1px solid rgba(120,180,255,.14);">
+                        <!-- segment header -->
+                        <div style="display:flex; align-items:center; gap:9px; margin-bottom:4px;">
+                          <span style="font:700 10px/1 var(--font-mono); letter-spacing:.05em; color:#5AA9FF; background:rgba(90,169,255,.12); border:1px solid rgba(90,169,255,.32); padding:4px 7px; border-radius:5px;">{{grp.index}}</span>
+                          <span style="font:700 12.5px/1 var(--font-mono); letter-spacing:.02em; color:#EAF2FF;">{{grp.header}}</span>
+                          <span style="flex:1;"></span>
+                          <sc-if value="{{grp.isSingle}}" hint-placeholder-val="{{true}}">
+                            <span style="display:inline-flex; align-items:center; gap:5px; font:700 9px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:#8CC3FF; background:rgba(90,169,255,.1); border:1px solid rgba(90,169,255,.3); padding:4px 8px; border-radius:100px;">
+                              <span style="width:9px; height:9px; border-radius:50%; border:1.6px solid #8CC3FF; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center;"><span style="width:3px; height:3px; border-radius:50%; background:#8CC3FF;"></span></span>
+                              SINGLE
+                            </span>
+                          </sc-if>
+                          <sc-if value="{{grp.isMulti}}" hint-placeholder-val="{{false}}">
+                            <span style="display:inline-flex; align-items:center; gap:5px; font:700 9px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:#8CC3FF; background:rgba(90,169,255,.1); border:1px solid rgba(90,169,255,.3); padding:4px 8px; border-radius:100px;">
+                              <span style="width:9px; height:9px; border-radius:3px; border:1.6px solid #8CC3FF; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center;"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="#8CC3FF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                              MULTI
+                            </span>
+                          </sc-if>
+                        </div>
+                        <div style="font:500 14.5px/1.45 var(--font-sans); color:#DCE8FA; margin-bottom:11px;">{{grp.question}}</div>
+
+                        <!-- options -->
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                          <sc-for list="{{grp.options}}" as="opt" hint-placeholder-count="3">
+                            <div onClick="{{opt.toggle}}" style="display:flex; align-items:flex-start; gap:12px; padding:11px 13px; border-radius:10px; cursor:pointer; background:{{opt.rowBg}}; border:{{opt.rowBorder}}; box-shadow:{{opt.rowGlow}};">
+                              <!-- radio mark -->
+                              <sc-if value="{{opt.single}}" hint-placeholder-val="{{true}}">
+                                <span style="width:20px; height:20px; margin-top:1px; border-radius:50%; box-sizing:border-box; flex-shrink:0; display:flex; align-items:center; justify-content:center; border:{{opt.markBorder}}; box-shadow:{{opt.markGlow}};">
+                                  <sc-if value="{{opt.checked}}" hint-placeholder-val="{{false}}"><span style="width:9px; height:9px; border-radius:50%; background:#5AA9FF; box-shadow:0 0 8px 1px rgba(90,169,255,.9);"></span></sc-if>
+                                </span>
+                              </sc-if>
+                              <!-- checkbox mark -->
+                              <sc-if value="{{opt.multi}}" hint-placeholder-val="{{false}}">
+                                <span style="width:20px; height:20px; margin-top:1px; border-radius:6px; box-sizing:border-box; flex-shrink:0; display:flex; align-items:center; justify-content:center; border:{{opt.markBorder}}; background:{{opt.markBg}}; box-shadow:{{opt.markGlow}};">
+                                  <sc-if value="{{opt.checked}}" hint-placeholder-val="{{false}}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></sc-if>
+                                </span>
+                              </sc-if>
+                              <div style="flex:1; min-width:0;">
+                                <div style="font:600 14px/1.35 var(--font-mono); color:{{opt.labelColor}};">{{opt.label}}</div>
+                                <div style="font:400 13px/1.5 var(--font-sans); color:rgba(190,217,255,.6); margin-top:2px;">{{opt.desc}}</div>
+                                <sc-if value="{{opt.hasPreview}}" hint-placeholder-val="{{false}}">
+                                  <div style="margin-top:9px; border-radius:8px; overflow:hidden; background:rgba(4,8,16,.75); border:1px solid rgba(90,169,255,.22); border-left:2px solid #5AA9FF;">
+                                    <div style="font:700 8.5px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:rgba(140,195,255,.6); padding:7px 10px 0;">Preview</div>
+                                    <div style="font:400 12px/1.6 var(--font-mono); color:rgba(190,217,255,.82); padding:5px 10px 9px; white-space:pre-wrap;">{{opt.preview}}</div>
+                                  </div>
+                                </sc-if>
+                              </div>
+                            </div>
+                          </sc-for>
+
+                          <!-- OTHER row -->
+                          <div onClick="{{grp.other.toggle}}" style="display:flex; align-items:flex-start; gap:12px; padding:11px 13px; border-radius:10px; cursor:pointer; background:{{grp.other.rowBg}}; border:{{grp.other.rowBorder}}; border-style:dashed;">
+                            <sc-if value="{{grp.other.single}}" hint-placeholder-val="{{true}}">
+                              <span style="width:20px; height:20px; margin-top:1px; border-radius:50%; box-sizing:border-box; flex-shrink:0; display:flex; align-items:center; justify-content:center; border:{{grp.other.markBorder}}; box-shadow:{{grp.other.markGlow}};">
+                                <sc-if value="{{grp.other.checked}}" hint-placeholder-val="{{false}}"><span style="width:9px; height:9px; border-radius:50%; background:#5AA9FF; box-shadow:0 0 8px 1px rgba(90,169,255,.9);"></span></sc-if>
+                              </span>
+                            </sc-if>
+                            <sc-if value="{{grp.other.multi}}" hint-placeholder-val="{{false}}">
+                              <span style="width:20px; height:20px; margin-top:1px; border-radius:6px; box-sizing:border-box; flex-shrink:0; display:flex; align-items:center; justify-content:center; border:{{grp.other.markBorder}}; background:{{grp.other.markBg}}; box-shadow:{{grp.other.markGlow}};">
+                                <sc-if value="{{grp.other.checked}}" hint-placeholder-val="{{false}}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></sc-if>
+                              </span>
+                            </sc-if>
+                            <div style="flex:1; min-width:0;">
+                              <div style="display:flex; align-items:center; gap:7px;">
+                                <span style="font:600 14px/1.35 var(--font-mono); color:#DCE8FA;">Other…</span>
+                                <span style="font:400 11.5px/1 var(--font-mono); color:rgba(190,217,255,.45);">Custom answer</span>
+                              </div>
+                              <sc-if value="{{grp.other.checked}}" hint-placeholder-val="{{false}}">
+                                <div onClick="{{stopClick}}" style="margin-top:9px; cursor:auto;">
+                                  <input value="{{grp.other.text}}" onChange="{{grp.other.onText}}" placeholder="Type your answer…" style="width:100%; box-sizing:border-box; border:1px solid rgba(90,169,255,.45); outline:none; background:rgba(4,8,16,.7); border-radius:8px; padding:9px 11px; font:400 14px/1.4 var(--font-sans); color:#EAF2FF; box-shadow:inset 0 0 20px -14px rgba(90,169,255,.7);"/>
+                                </div>
+                              </sc-if>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+
+                  <!-- submit bar -->
+                  <div style="position:relative; margin-top:16px; padding-top:14px; border-top:1px solid rgba(90,169,255,.16); display:flex; align-items:center; gap:16px;">
+                    <div style="flex:1; min-width:0;">
+                      <div style="display:flex; align-items:center; gap:8px; margin-bottom:7px;">
+                        <span style="font:700 9.5px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:rgba(140,195,255,.6);">Answered</span>
+                        <span style="font:600 11px/1 var(--font-mono); color:#8CC3FF;">{{answeredCount}} / 2</span>
+                      </div>
+                      <span style="display:block; width:100%; max-width:220px; height:5px; border-radius:100px; background:rgba(90,169,255,.14); overflow:hidden; box-shadow:inset 0 0 6px rgba(0,0,0,.4);"><span style="display:block; width:{{progressPct}}; height:100%; background:linear-gradient(90deg,#2F6FD6,#5AA9FF); border-radius:100px; box-shadow:0 0 10px rgba(90,169,255,.9);"></span></span>
+                    </div>
+                    <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
+                      <span onClick="{{doSubmit}}" style="display:inline-flex; align-items:center; gap:8px; padding:12px 22px; border-radius:10px; font:700 15px/1 var(--font-sans); background:{{submitBg}}; color:{{submitColor}}; border:{{submitBorder}}; box-shadow:{{submitGlow}}; cursor:{{submitCursor}};">
+                        Submit
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{submitColor}}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                      </span>
+                      <sc-if value="{{showSubmitHint}}" hint-placeholder-val="{{true}}">
+                        <span style="font:400 10.5px/1 var(--font-mono); color:rgba(190,217,255,.4);">Submit becomes available once all questions are answered</span>
+                      </sc-if>
+                    </div>
+                  </div>
+                </div>
+              </sc-if>
+
+              <!-- ============ ANSWERED SUMMARY CARD ============ -->
+              <sc-if value="{{answered}}" hint-placeholder-val="{{false}}">
+                <div style="position:relative; border-radius:14px; overflow:hidden; padding:15px 17px;
+                            background:rgba(120,180,255,.05); border:1px solid rgba(90,169,255,.3);
+                            box-shadow:inset 0 0 44px -28px rgba(90,169,255,.6);">
+                  <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#5AA9FF" style="flex-shrink:0; filter:drop-shadow(0 0 4px rgba(90,169,255,.7));"><path d="M12 2.5C6.48 2.5 2 6.98 2 12.5C2 18.02 6.48 22.5 12 22.5C17.52 22.5 22 18.02 22 12.5C22 6.98 17.52 2.5 12 2.5ZM10 17.5L5 12.5L6.41 11.09L10 14.67L17.59 7.08L19 8.5L10 17.5Z"></path></svg>
+                    <span style="font:700 9.5px/1 var(--font-mono); letter-spacing:.2em; text-transform:uppercase; color:rgba(140,195,255,.7);">ASKUSERQUESTION · ANSWERED</span>
+                    <span style="flex:1;"></span>
+                    <span style="font:600 10px/1 var(--font-mono); color:rgba(190,217,255,.45);">2 questions</span>
+                  </div>
+                  <sc-for list="{{summaryGroups}}" as="sg" hint-placeholder-count="2">
+                    <div style="display:flex; align-items:flex-start; gap:11px; padding:10px 0; border-top:1px solid rgba(90,169,255,.12);">
+                      <span style="font:700 10px/1 var(--font-mono); color:rgba(140,195,255,.55); background:rgba(90,169,255,.08); border:1px solid rgba(90,169,255,.22); padding:4px 6px; border-radius:5px; flex-shrink:0;">{{sg.index}}</span>
+                      <div style="flex:1; min-width:0;">
+                        <div style="font:600 11.5px/1 var(--font-mono); color:rgba(190,217,255,.6); margin-bottom:6px;">{{sg.header}}</div>
+                        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                          <sc-for list="{{sg.chips}}" as="chip" hint-placeholder-count="1">
+                            <span style="font:600 12.5px/1.3 var(--font-mono); color:#EAF2FF; background:rgba(90,169,255,.12); border:1px solid rgba(90,169,255,.35); padding:5px 10px; border-radius:7px;">{{chip.text}}</span>
+                          </sc-for>
+                        </div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+
+          <!-- ===== user echo bubble (answered) ===== -->
+          <sc-if value="{{answered}}" hint-placeholder-val="{{false}}">
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
+              <span style="font:700 9px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:rgba(140,195,255,.5); margin-right:2px;">Your reply</span>
+              <div style="max-width:80%; background:linear-gradient(160deg, rgba(90,169,255,.24), rgba(47,111,214,.16)); border:1px solid rgba(90,169,255,.5); border-radius:12px 12px 3px 12px; padding:11px 15px; font:500 14px/1.6 var(--font-mono); color:#EAF2FF; white-space:pre-line; box-shadow:0 0 22px -8px rgba(90,169,255,.6), inset 0 0 20px -12px rgba(90,169,255,.6);">{{echoText}}</div>
+            </div>
+          </sc-if>
+
+        </div>
+
+        <!-- ===== composer ===== -->
+        <div style="position:relative; z-index:4; flex-shrink:0; border-top:1px solid rgba(90,169,255,.2); padding:14px 18px;">
+          <!-- LOCKED -->
+          <sc-if value="{{composerLocked}}" hint-placeholder-val="{{true}}">
+            <div style="position:relative; border-radius:11px; overflow:hidden; border:1px dashed rgba(90,169,255,.3); background:rgba(6,12,22,.5);">
+              <div style="position:absolute; inset:0; pointer-events:none; background-image:repeating-linear-gradient(135deg, rgba(90,169,255,.05) 0 8px, transparent 8px 16px);"></div>
+              <div style="position:relative; display:flex; align-items:center; gap:11px; padding:15px 16px; opacity:.9;">
+                <span style="width:34px; height:34px; border-radius:9px; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:rgba(90,169,255,.1); border:1px solid rgba(90,169,255,.3);">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8CC3FF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+                </span>
+                <div style="flex:1; min-width:0;">
+                  <div style="font:700 9px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:#5AA9FF; margin-bottom:4px;">Locked · INPUT PAUSED</div>
+                  <span style="font:400 13.5px/1.4 var(--font-sans); color:rgba(190,217,255,.6);">Please answer the question card above before sending another message.</span>
+                </div>
+                <span style="flex-shrink:0; width:44px; height:44px; border-radius:11px; background:rgba(90,169,255,.06); border:1px solid rgba(90,169,255,.2); display:flex; align-items:center; justify-content:center; opacity:.5;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(140,195,255,.5)"><path d="M3 11.5L21 4L13.5 21.5L11.3 14.7L3 11.5Z"></path></svg>
+                </span>
+              </div>
+            </div>
+          </sc-if>
+          <!-- UNLOCKED -->
+          <sc-if value="{{composerUnlocked}}" hint-placeholder-val="{{false}}">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="flex:1; background:rgba(6,12,22,.7); border:1px solid rgba(90,169,255,.32); border-radius:10px; padding:12px 14px; display:flex; align-items:center; gap:9px; box-shadow:inset 0 0 24px -14px rgba(90,169,255,.6);">
+                <span style="font:700 11px/1 var(--font-mono); color:#8CC3FF; background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.4); padding:4px 7px; border-radius:6px; flex-shrink:0;">/</span>
+                <span style="flex:1; font:400 15px/1.4 var(--font-sans); color:rgba(190,217,255,.45);">Type a command or message…</span>
+              </div>
+              <div style="flex-shrink:0; width:50px; height:50px; border-radius:11px; background:linear-gradient(180deg,#5AA9FF,#2F6FD6); display:flex; align-items:center; justify-content:center; box-shadow:0 0 22px -4px rgba(90,169,255,.8), inset 0 1px 0 rgba(255,255,255,.35);">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="#fff"><path d="M3 11.5L21 4L13.5 21.5L11.3 14.7L3 11.5Z"></path></svg>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CAPTION / LEGEND ============ -->
+  <div style="max-width:800px; margin:26px auto 0;">
+    <p style="margin:0 0 14px; font:400 13.5px/1.7 var(--font-sans); color:rgba(190,217,255,.55);">
+      <b style="color:#BFD9FF; font-weight:700;">Pending</b>: the card lists each group's question and options — radio for single choice, checkbox for multi-select, distinguishable at a glance; the "Other" input only expands once selected, and requires content to count as answered; "Submit" only lights up once every question is answered. While answering, the input bar below stays locked to avoid an accidental message interrupting this round.
+      <br><b style="color:#BFD9FF; font-weight:700;">Answered</b>: after submitting, the card compresses in place into a read-only summary (the node turns to complete), followed by a compact user bubble echo below, so reviewing the history shows "what was asked and what was picked at the time."
+    </p>
+    <div style="display:flex; flex-wrap:wrap; gap:18px; padding:14px 16px; border-radius:12px; background:rgba(8,14,24,.6); border:1px solid rgba(90,169,255,.2);">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="width:18px; height:18px; border-radius:50%; border:2px solid #5AA9FF; box-sizing:border-box; display:flex; align-items:center; justify-content:center;"><span style="width:8px; height:8px; border-radius:50%; background:#5AA9FF;"></span></span>
+        <span style="font:600 12px/1 var(--font-mono); color:rgba(190,217,255,.7);">radio · single choice</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="width:18px; height:18px; border-radius:5px; background:linear-gradient(180deg,#5AA9FF,#2F6FD6); display:flex; align-items:center; justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+        <span style="font:600 12px/1 var(--font-mono); color:rgba(190,217,255,.7);">checkbox · multi-select</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="width:18px; height:18px; border-radius:5px; border:2px dashed rgba(140,195,255,.5); box-sizing:border-box;"></span>
+        <span style="font:600 12px/1 var(--font-mono); color:rgba(190,217,255,.7);">Other · custom input</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="width:12px; height:12px; border-radius:50%; background:#5AA9FF; box-shadow:0 0 10px 2px rgba(90,169,255,.8);"></span>
+        <span style="font:600 12px/1 var(--font-mono); color:rgba(190,217,255,.7);">thread node · awaiting input</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:1300},&quot;startState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;pending&quot;,&quot;answered&quot;],&quot;default&quot;:&quot;pending&quot;,&quot;tsType&quot;:&quot;'pending'|'answered'&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;showPreviews&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Appearance&quot;},&quot;composerLock&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const answered = !!(props && props.startState === 'answered');
+    this.state = {
+      answered,
+      g1: 'replay',
+      g1Other: '',
+      g2: answered ? { tests: true, telemetry: true } : {},
+      g2Other: false,
+      g2OtherText: '',
+    };
+  }
+
+  GROUPS = [
+    {
+      id: 'g1', index: 'Q1', header: 'Implementation approach', multi: false,
+      question: 'Which strategy should we use for reconnect compensation?',
+      options: [
+        { id: 'backoff', label: 'Exponential backoff retry', desc: 'After disconnecting, retry with increasing intervals of 1s → 2s → 4s, up to 5 times' },
+        { id: 'replay', label: 'Event replay', desc: 'After reconnecting, send last_event_id to the server to fetch events missed during the outage', preview: 'socket.send({ type: "replay", after: lastEventId })\n// server backfills events between (lastEventId, now]' },
+        { id: 'heartbeat', label: 'Heartbeat detection + immediate reconnect', desc: 'Ping every 15s; reconnect on timeout, without replaying events' },
+      ],
+    },
+    {
+      id: 'g2', index: 'Q2', header: 'Scope', multi: true,
+      question: 'Which parts should we also handle this time? (multiple choice)',
+      options: [
+        { id: 'tests', label: 'Add unit tests', desc: 'Add a set of vitest tests for the reconnect flow' },
+        { id: 'docs', label: 'Update README', desc: 'Document the reconnect behavior and backoff parameters' },
+        { id: 'telemetry', label: 'Add telemetry logging', desc: 'Log reconnect counts and latency for future observability' },
+      ],
+    },
+  ];
+
+  g1AnswerLabel() {
+    const s = this.state;
+    if (s.g1 === 'other') return s.g1Other.trim();
+    const o = this.GROUPS[0].options.find((x) => x.id === s.g1);
+    return o ? o.label : '';
+  }
+  g2AnswerLabels() {
+    const s = this.state;
+    const labels = this.GROUPS[1].options.filter((x) => s.g2[x.id]).map((x) => x.label);
+    if (s.g2Other && s.g2OtherText.trim()) labels.push(s.g2OtherText.trim());
+    return labels;
+  }
+  g1Answered() { return !!this.g1AnswerLabel(); }
+  g2Answered() { return this.g2AnswerLabels().length > 0; }
+
+  radioMark(checked) {
+    return checked
+      ? { markBorder: '2px solid #5AA9FF', markBg: 'transparent', markGlow: '0 0 10px -3px rgba(90,169,255,.75)' }
+      : { markBorder: '2px solid rgba(140,195,255,.5)', markBg: 'transparent', markGlow: 'none' };
+  }
+  checkMark(checked) {
+    return checked
+      ? { markBorder: '1px solid #5AA9FF', markBg: 'linear-gradient(180deg,#5AA9FF,#2F6FD6)', markGlow: '0 0 10px -2px rgba(90,169,255,.85)' }
+      : { markBorder: '2px solid rgba(140,195,255,.5)', markBg: 'transparent', markGlow: 'none' };
+  }
+  rowSkin(checked) {
+    return {
+      rowBg: checked ? 'rgba(90,169,255,.13)' : 'rgba(120,180,255,.035)',
+      rowBorder: checked ? '1px solid rgba(90,169,255,.55)' : '1px solid rgba(120,180,255,.16)',
+      rowGlow: checked ? 'inset 0 0 30px -18px rgba(90,169,255,.9), 0 0 18px -10px rgba(90,169,255,.5)' : 'none',
+      labelColor: checked ? '#EAF2FF' : '#DCE8FA',
+    };
+  }
+
+  buildGroups() {
+    const showPrev = this.props.showPreviews !== false;
+
+    const g1 = this.GROUPS[0];
+    const g1opts = g1.options.map((o) => {
+      const checked = this.state.g1 === o.id;
+      return {
+        label: o.label, desc: o.desc,
+        preview: o.preview || '', hasPreview: !!o.preview && showPrev,
+        single: true, multi: false, checked,
+        ...this.rowSkin(checked), ...this.radioMark(checked),
+        toggle: () => this.setState({ g1: o.id }),
+      };
+    });
+    const g1oc = this.state.g1 === 'other';
+    const g1other = {
+      single: true, multi: false, checked: g1oc,
+      ...this.rowSkin(g1oc), ...this.radioMark(g1oc),
+      text: this.state.g1Other,
+      toggle: () => this.setState({ g1: 'other' }),
+      onText: (e) => this.setState({ g1Other: e.target.value }),
+    };
+
+    const g2 = this.GROUPS[1];
+    const g2opts = g2.options.map((o) => {
+      const checked = !!this.state.g2[o.id];
+      return {
+        label: o.label, desc: o.desc,
+        preview: '', hasPreview: false,
+        single: false, multi: true, checked,
+        ...this.rowSkin(checked), ...this.checkMark(checked),
+        toggle: () => this.setState((st) => ({ g2: { ...st.g2, [o.id]: !st.g2[o.id] } })),
+      };
+    });
+    const g2oc = this.state.g2Other;
+    const g2other = {
+      single: false, multi: true, checked: g2oc,
+      ...this.rowSkin(g2oc), ...this.checkMark(g2oc),
+      text: this.state.g2OtherText,
+      toggle: () => this.setState((st) => ({ g2Other: !st.g2Other })),
+      onText: (e) => this.setState({ g2OtherText: e.target.value }),
+    };
+
+    return [
+      { index: g1.index, header: g1.header, question: g1.question, isMulti: false, isSingle: true, options: g1opts, other: g1other },
+      { index: g2.index, header: g2.header, question: g2.question, isMulti: true, isSingle: false, options: g2opts, other: g2other },
+    ];
+  }
+
+  renderVals() {
+    const answered = this.state.answered;
+    const pending = !answered;
+    const groups = this.buildGroups();
+
+    const a1 = this.g1Answered();
+    const a2 = this.g2Answered();
+    const answeredCount = (a1 ? 1 : 0) + (a2 ? 1 : 0);
+    const canSubmit = a1 && a2;
+
+    const g1Label = this.g1AnswerLabel() || '—';
+    const g2Labels = this.g2AnswerLabels();
+    const g2Text = g2Labels.length ? g2Labels.join(', ') : '—';
+
+    const summaryGroups = [
+      { index: 'Q1', header: 'Implementation approach', chips: [{ text: g1Label }] },
+      { index: 'Q2', header: 'Scope', chips: (g2Labels.length ? g2Labels : ['—']).map((t) => ({ text: t })) },
+    ];
+
+    const echoText = 'Implementation approach → ' + g1Label + '\nScope → ' + g2Text;
+
+    const composerLock = this.props.composerLock !== false;
+    const composerLocked = pending && composerLock;
+
+    return {
+      answered, pending,
+      statusLabel: answered ? 'Running' : 'Waiting',
+      groups,
+      answeredCount,
+      progressPct: (answeredCount / 2) * 100 + '%',
+      canSubmit,
+      submitBg: canSubmit ? 'linear-gradient(180deg,#5AA9FF,#2F6FD6)' : 'rgba(90,169,255,.1)',
+      submitColor: canSubmit ? '#ffffff' : 'rgba(190,217,255,.4)',
+      submitGlow: canSubmit ? '0 0 24px -4px rgba(90,169,255,.85), inset 0 1px 0 rgba(255,255,255,.35)' : 'none',
+      submitBorder: canSubmit ? '1px solid rgba(90,169,255,.6)' : '1px solid rgba(90,169,255,.2)',
+      submitCursor: canSubmit ? 'pointer' : 'not-allowed',
+      showSubmitHint: !canSubmit,
+      doSubmit: () => { if (canSubmit) this.setState({ answered: true }); },
+
+      summaryGroups,
+      echoText,
+
+      composerLocked,
+      composerUnlocked: !composerLocked,
+
+      stopClick: (e) => e.stopPropagation(),
+
+      goPending: () => this.setState({ answered: false }),
+      goAnswered: () => this.setState((st) => {
+        let g2 = st.g2;
+        if (!Object.values(g2).some(Boolean) && !st.g2Other) g2 = { tests: true, telemetry: true };
+        return { answered: true, g1: st.g1 || 'replay', g2 };
+      }),
+      goReset: () => this.setState({ answered: false, g1: 'replay', g1Other: '', g2: {}, g2Other: false, g2OtherText: '' }),
+      pendingTabBg: pending ? 'rgba(90,169,255,.16)' : 'transparent',
+      pendingTabColor: pending ? '#8CC3FF' : 'rgba(190,217,255,.5)',
+      answeredTabBg: answered ? 'rgba(90,169,255,.16)' : 'transparent',
+      answeredTabColor: answered ? '#8CC3FF' : 'rgba(190,217,255,.5)',
+    };
+  }
+}
+</script>
+</body>
+</html>

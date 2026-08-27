@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/radius-elevation.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/styles.css">
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+    :root{ --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; }
+    body{ margin:0; font-family:var(--font-sans); -webkit-font-smoothing:antialiased; }
+    a{ color:#5AA9FF; text-decoration:none; } a:hover{ color:#8CC3FF; }
+    @keyframes vc-grid{ from{ background-position:0 0, 0 0 } to{ background-position:0 60px, 0 0 } }
+    @keyframes vc-scan{ 0%{ transform:translateY(-90px); opacity:0 } 10%{ opacity:.5 } 90%{ opacity:.5 } 100%{ transform:translateY(560px); opacity:0 } }
+    @keyframes vc-scandrift{ from{ background-position:0 0 } to{ background-position:0 6px } }
+    @keyframes vc-signal{ 0%,100%{ opacity:.4 } 50%{ opacity:1 } }
+    @keyframes vc-breathe{ 0%,100%{ opacity:1 } 50%{ opacity:.35 } }
+    @keyframes vc-caret{ 0%,49%{ opacity:1 } 50%,100%{ opacity:0 } }
+    @keyframes vc-flicker{ 0%,100%{ opacity:1 } 92%{ opacity:1 } 94%{ opacity:.55 } 96%{ opacity:1 } 97%{ opacity:.7 } 98%{ opacity:1 } }
+    @keyframes vc-orb-warn{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,157,77,.6), 0 0 12px 2px rgba(255,157,77,.85) } 50%{ box-shadow:0 0 0 8px rgba(255,157,77,0), 0 0 20px 5px rgba(255,157,77,.95) } }
+    @keyframes vc-keypulse{ 0%,100%{ box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18) } 50%{ box-shadow:0 0 16px 0px rgba(90,169,255,.85), inset 0 1px 0 rgba(255,255,255,.25) } }
+  </style>
+</helmet>
+
+<div style="position:relative; min-height:100vh; padding:56px 40px 120px; box-sizing:border-box; overflow:hidden; font-family:var(--font-sans); color:#DCE8FA;
+            background:radial-gradient(ellipse 900px 520px at 50% -8%, rgba(67,131,228,.18), transparent 60%), radial-gradient(ellipse 700px 500px at 82% 112%, rgba(25,203,182,.1), transparent 60%), linear-gradient(180deg,#05070C,#03040a);">
+
+  <!-- perspective grid floor -->
+  <div style="position:absolute; left:-20%; right:-20%; bottom:0; height:34%; pointer-events:none; z-index:0; background-image:linear-gradient(rgba(90,169,255,.28) 1px, transparent 1px), linear-gradient(90deg, rgba(90,169,255,.14) 1px, transparent 1px); background-size:64px 64px, 64px 64px; transform:perspective(400px) rotateX(74deg); transform-origin:bottom center; -webkit-mask-image:linear-gradient(0deg,#000,transparent 80%); mask-image:linear-gradient(0deg,#000,transparent 80%); animation:vc-grid 4.5s linear infinite;"></div>
+
+  <!-- ============ DOC HEADER ============ -->
+  <div style="position:relative; z-index:1; max-width:1560px; margin:0 auto 8px;">
+    <div style="display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;">
+      <span style="font:800 28px/1.2 var(--font-sans); color:#EAF2FF; letter-spacing:-.01em; white-space:nowrap; text-shadow:0 0 18px rgba(90,169,255,.5);">Fixed Hotkeys (macOS Hotkeys)</span>
+      <span style="font:600 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:#5AA9FF; background:rgba(90,169,255,.1); border:1px solid rgba(90,169,255,.35); padding:5px 11px; border-radius:100px; white-space:nowrap;">SCI-FI HUD · .commands + .onKeyPress</span>
+    </div>
+    <p style="margin:10px 0 0; font:400 15px/1.6 var(--font-sans); color:rgba(220,232,250,.62); max-width:880px;">A fixed set of macOS keyboard shortcuts — no user customization. <b style="color:#BFD9FF; font-weight:700;">Category A</b> (global, state doesn't depend on the cursor) goes into the macOS menu bar — giving the hotkey a visible entry point you can also click with the mouse; <b style="color:#BFD9FF; font-weight:700;">Category B</b> (tightly coupled to the current keyboard focus / UI state) stays in the corresponding View's <span style="font-family:var(--font-mono); font-size:13px; color:#BFD9FF;">.onKeyPress</span>. Below, each key is mapped to its existing action and whether it's available on visionOS.</p>
+  </div>
+
+  <!-- legend: what a key cap means -->
+  <div style="position:relative; z-index:1; max-width:1560px; margin:22px auto 0; display:flex; flex-wrap:wrap; align-items:center; gap:22px; border-radius:14px; padding:15px 20px;
+              background:linear-gradient(160deg, rgba(16,27,45,.7), rgba(7,12,22,.66)); border:1px solid rgba(90,169,255,.24); box-shadow:0 0 40px -18px rgba(67,131,228,.5);">
+    <span style="font:700 10px/1 var(--font-mono); letter-spacing:.2em; text-transform:uppercase; color:#5AA9FF;">◇ Legend</span>
+    <span style="display:inline-flex; align-items:center; gap:8px; font:500 13px/1.4 var(--font-sans); color:rgba(220,232,250,.72);"><span style="display:inline-flex; align-items:center; gap:3px;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12.5px/1 var(--font-mono); color:#CFE4FF;">⌘</span><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12.5px/1 var(--font-mono); color:#CFE4FF;">K</span></span>HUD key cap = this hotkey annotation</span>
+    <span style="display:inline-flex; align-items:center; gap:8px; font:500 13px/1.4 var(--font-sans); color:rgba(220,232,250,.72);"><span style="font:600 11px/1 var(--font-mono); color:#AFC0D4; background:rgba(140,178,201,.1); border:1px solid rgba(140,178,201,.32); padding:5px 9px; border-radius:100px;">macOS only</span>Menu-bar driven; visionOS has no menu bar</span>
+    <span style="display:inline-flex; align-items:center; gap:8px; font:500 13px/1.4 var(--font-sans); color:rgba(220,232,250,.72);"><span style="font:600 11px/1 var(--font-mono); color:#3EE2C9; background:rgba(62,226,201,.1); border:1px solid rgba(62,226,201,.35); padding:5px 9px; border-radius:100px;">visionOS ✓</span>onKeyPress — also works with a connected Bluetooth keyboard</span>
+  </div>
+
+  <!-- ============ SECTION A — macOS 選單列 ============ -->
+  <div style="position:relative; z-index:1; max-width:1560px; margin:44px auto 8px; display:flex; align-items:center; gap:10px;">
+    <span style="font:700 11px/1 var(--font-mono); letter-spacing:.2em; text-transform:uppercase; color:#5AA9FF;">◇ Category A · macOS menu bar (the visible entry point for hotkeys)</span>
+    <span style="flex:1; height:1px; background:linear-gradient(90deg, rgba(90,169,255,.4), transparent);"></span>
+    <span style="font:600 11px/1 var(--font-mono); color:#AFC0D4; background:rgba(140,178,201,.1); border:1px solid rgba(140,178,201,.3); padding:5px 10px; border-radius:100px;">macOS only</span>
+  </div>
+  <p style="position:relative; z-index:1; max-width:880px; margin:0 auto 22px 0; padding-left:2px; font:400 14px/1.65 var(--font-sans); color:rgba(220,232,250,.58);">The menu bar and the keyboard shortcut share the same action, read via <span style="font-family:var(--font-mono); font-size:12.5px; color:#BFD9FF;">@FocusedValue</span>; when it can't be read (no focused window provides that value), the item is disabled and the shortcut naturally does nothing. <b style="color:#BFD9FF; font-weight:700;">Click Session/Chat in the menu bar below to toggle it open</b>.</p>
+
+  <div style="position:relative; z-index:1; max-width:1560px; margin:0 auto 22px; display:flex; gap:34px; flex-wrap:wrap; justify-content:center; align-items:flex-start;">
+
+    <!-- interactive desktop + menu bar -->
+    <div style="width:640px; max-width:94vw;">
+      <div style="text-align:center; margin-bottom:12px; font:600 11px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:rgba(190,217,255,.55);">Active · has a focused session</div>
+      <div style="position:relative; height:436px; border-radius:14px; overflow:hidden; border:1px solid rgba(120,150,190,.28); box-shadow:0 30px 70px -22px rgba(0,0,0,.8), 0 0 50px -18px rgba(67,131,228,.35);
+                  background:radial-gradient(ellipse 700px 460px at 30% 0%, rgba(58,96,150,.5), transparent 60%), radial-gradient(ellipse 600px 500px at 88% 110%, rgba(26,120,110,.4), transparent 60%), linear-gradient(160deg,#101826,#0a1017);">
+        <!-- macOS menu bar -->
+        <div style="position:relative; z-index:20; height:30px; display:flex; align-items:center; gap:1px; padding:0 8px 0 12px; background:rgba(22,24,30,.66); backdrop-filter:blur(26px) saturate(1.5); -webkit-backdrop-filter:blur(26px) saturate(1.5); border-bottom:1px solid rgba(255,255,255,.08);">
+          <!-- app icon -->
+          <span style="width:15px; height:15px; border-radius:4px; margin-right:8px; background:linear-gradient(180deg,#5AA9FF,#2F6FD6); box-shadow:0 0 8px -2px rgba(90,169,255,.9), inset 0 1px 0 rgba(255,255,255,.4); flex-shrink:0;"></span>
+          <span style="font:700 13px/1 var(--font-sans); color:#F2F5FA; padding:4px 9px;">VisionClaude</span>
+          <span style="font:400 13px/1 var(--font-sans); color:rgba(233,238,245,.72); padding:4px 9px;">File</span>
+          <span style="font:400 13px/1 var(--font-sans); color:rgba(233,238,245,.72); padding:4px 9px;">Edit</span>
+          <!-- Session (interactive) -->
+          <span style="position:relative;">
+            <span onClick="{{openSession}}" style="display:inline-block; font:400 13px/1 var(--font-sans); color:{{sessionColor}}; background:{{sessionBg}}; padding:4px 9px; border-radius:4px; cursor:default;">Session</span>
+            <sc-if value="{{sessionActive}}" hint-placeholder-val="{{true}}">
+              <div style="position:absolute; top:29px; left:0; width:296px; padding:5px; z-index:40; border-radius:8px; text-align:left;
+                          background:rgba(40,42,48,.82); backdrop-filter:blur(34px) saturate(1.5); -webkit-backdrop-filter:blur(34px) saturate(1.5);
+                          border:1px solid rgba(255,255,255,.14); box-shadow:0 26px 60px -14px rgba(0,0,0,.78), 0 0 0 1px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.1);">
+                <div style="display:flex; align-items:center; gap:24px; padding:6px 10px; border-radius:5px; background:#3A6FE0;">
+                  <span style="flex:1; font:400 13.5px/1.4 var(--font-sans); color:#fff; white-space:nowrap;">New Session</span>
+                  <span style="font:500 13px/1 var(--font-mono); color:#E7EEFA;">⌘N</span>
+                </div>
+                <div style="height:1px; margin:5px 9px; background:rgba(255,255,255,.1);"></div>
+                <div style="padding:5px 10px 3px; font:400 10.5px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.34);">Go to Session</div>
+                <div style="display:flex; align-items:center; gap:24px; padding:6px 10px; border-radius:5px;"><span style="flex:1; font:400 13.5px/1.4 var(--font-sans); color:#E9EEF5; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Refactor WS reconnect</span><span style="font:500 13px/1 var(--font-mono); color:#93A6BE;">⌘1</span></div>
+                <div style="display:flex; align-items:center; gap:24px; padding:6px 10px; border-radius:5px;"><span style="flex:1; font:400 13.5px/1.4 var(--font-sans); color:#E9EEF5; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Fix permission broker race</span><span style="font:500 13px/1 var(--font-mono); color:#93A6BE;">⌘2</span></div>
+                <div style="display:flex; align-items:center; gap:24px; padding:6px 10px; border-radius:5px;"><span style="flex:1; font:400 13.5px/1.4 var(--font-sans); color:#E9EEF5; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Add cross-session search</span><span style="font:500 13px/1 var(--font-mono); color:#93A6BE;">⌘3</span></div>
+                <div style="display:flex; align-items:center; gap:24px; padding:6px 10px; border-radius:5px;"><span style="flex:1; font:400 13.5px/1.4 var(--font-sans); color:#E9EEF5; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Token refresh flow</span><span style="font:500 13px/1 var(--font-mono); color:#93A6BE;">⌘4</span></div>
+                <div style="display:flex; align-items:center; gap:24px; padding:6px 10px; border-radius:5px;"><span style="flex:1; font:400 13.5px/1.4 var(--font-sans); color:rgba(233,238,245,.5); white-space:nowrap;">…rest in list order</span><span style="font:500 13px/1 var(--font-mono); color:rgba(147,166,190,.6);">⌘5–9</span></div>
+                <div style="height:1px; margin:5px 9px; background:rgba(255,255,255,.1);"></div>
+                <div style="display:flex; align-items:center; gap:24px; padding:6px 10px; border-radius:5px;"><span style="flex:1; font:400 13.5px/1.4 var(--font-sans); color:#E9EEF5; white-space:nowrap;">Settings…</span><span style="font:500 13px/1 var(--font-mono); color:#93A6BE;">⌘,</span></div>
+              </div>
+            </sc-if>
+          </span>
+          <!-- Chat (interactive) -->
+          <span style="position:relative;">
+            <span onClick="{{openChat}}" style="display:inline-block; font:400 13px/1 var(--font-sans); color:{{chatColor}}; background:{{chatBg}}; padding:4px 9px; border-radius:4px; cursor:default;">Chat</span>
+            <sc-if value="{{chatActive}}" hint-placeholder-val="{{false}}">
+              <div style="position:absolute; top:29px; left:0; width:320px; padding:5px; z-index:40; border-radius:8px; text-align:left;
+                          background:rgba(40,42,48,.82); backdrop-filter:blur(34px) saturate(1.5); -webkit-backdrop-filter:blur(34px) saturate(1.5);
+                          border:1px solid rgba(255,255,255,.14); box-shadow:0 26px 60px -14px rgba(0,0,0,.78), 0 0 0 1px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.1);">
+                <div style="display:flex; align-items:center; gap:24px; padding:6px 10px; border-radius:5px; background:#3A6FE0;">
+                  <span style="flex:1; font:400 13.5px/1.4 var(--font-sans); color:#fff; white-space:nowrap;">Toggle Voice Input</span>
+                  <span style="font:500 13px/1 var(--font-mono); color:#E7EEFA;">⇧⌘V</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:24px; padding:6px 10px; border-radius:5px;"><span style="flex:1; font:400 13.5px/1.4 var(--font-sans); color:#E9EEF5; white-space:nowrap;">Attach File</span><span style="font:500 13px/1 var(--font-mono); color:#93A6BE;">⇧⌘A</span></div>
+                <div style="display:flex; align-items:center; gap:24px; padding:6px 10px; border-radius:5px;"><span style="flex:1; font:400 13.5px/1.4 var(--font-sans); color:#E9EEF5; white-space:nowrap;">Relay to Another Session</span><span style="font:500 13px/1 var(--font-mono); color:#93A6BE;">⇧⌘F</span></div>
+                <div style="height:1px; margin:5px 9px; background:rgba(255,255,255,.1);"></div>
+                <div style="display:flex; align-items:center; gap:24px; padding:6px 10px; border-radius:5px;"><span style="flex:1; font:400 13.5px/1.4 var(--font-sans); color:#E9EEF5; white-space:nowrap;">Toggle Model Menu</span><span style="font:500 13px/1 var(--font-mono); color:#93A6BE;">⇧⌘M</span></div>
+                <div style="display:flex; align-items:center; gap:24px; padding:6px 10px; border-radius:5px;"><span style="flex:1; font:400 13.5px/1.4 var(--font-sans); color:#E9EEF5; white-space:nowrap;">Toggle Permission Mode Menu</span><span style="font:500 13px/1 var(--font-mono); color:#93A6BE;">⇧⌘P</span></div>
+              </div>
+            </sc-if>
+          </span>
+          <span style="font:400 13px/1 var(--font-sans); color:rgba(233,238,245,.72); padding:4px 9px;">Window</span>
+          <span style="font:400 13px/1 var(--font-sans); color:rgba(233,238,245,.72); padding:4px 9px;">Help</span>
+          <span style="flex:1;"></span>
+          <!-- status cluster -->
+          <span style="display:flex; align-items:center; gap:2px; margin-right:8px;">
+            <span style="width:2px; height:5px; background:rgba(233,238,245,.7); border-radius:1px;"></span><span style="width:2px; height:8px; background:rgba(233,238,245,.7); border-radius:1px;"></span><span style="width:2px; height:11px; background:rgba(233,238,245,.7); border-radius:1px;"></span>
+          </span>
+          <span style="width:20px; height:11px; border-radius:2.5px; border:1px solid rgba(233,238,245,.55); position:relative; margin-right:10px;"><span style="position:absolute; left:1.5px; top:1.5px; bottom:1.5px; width:70%; background:#3EE2C9; border-radius:1px;"></span></span>
+          <span style="font:500 12.5px/1 var(--font-sans); color:#F2F5FA;">Wed 9:41</span>
+        </div>
+        <!-- callout to our two menus -->
+        <div style="position:absolute; z-index:10; left:118px; top:33px; display:flex; align-items:center; gap:6px;">
+          <span style="width:1px; height:0;"></span>
+        </div>
+        <!-- wallpaper hint text -->
+        <div style="position:absolute; inset:30px 0 0 0; z-index:1; display:flex; align-items:flex-end; justify-content:center; padding-bottom:16px; pointer-events:none;">
+          <span style="font:600 10px/1.5 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:rgba(180,205,240,.28); text-align:center;">◇ New in this pass: the Session and Chat menus<br>share app actions · shortcut and mouse click are equivalent</span>
+        </div>
+      </div>
+      <p style="margin:12px 4px 0; font:400 12.5px/1.6 var(--font-sans); color:rgba(190,217,255,.5);">⌘1–9 map to the current SessionListView list order; ⌘⇧V/A/F/M/P are only available when the active window is a chat session (⌘⇧F additionally requires another session to exist).</p>
+    </div>
+
+    <!-- disabled state -->
+    <div style="width:340px; max-width:94vw;">
+      <div style="text-align:center; margin-bottom:12px; font:600 11px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:rgba(190,217,255,.55);">No focused session · Chat entirely disabled</div>
+      <div style="border-radius:12px; padding:5px; background:rgba(40,42,48,.9); border:1px solid rgba(255,255,255,.12); box-shadow:0 24px 60px -18px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.08);">
+        <div style="display:flex; align-items:center; gap:8px; padding:8px 10px 9px;">
+          <span style="width:6px; height:6px; border-radius:50%; background:#FF9D4D; box-shadow:0 0 7px 1px rgba(255,157,77,.8);"></span>
+          <span style="font:700 9px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:rgba(255,193,140,.85);">Chat · can't read ChatActions</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:24px; padding:6px 10px; border-radius:5px;"><span style="flex:1; font:400 13.5px/1.4 var(--font-sans); color:rgba(233,238,245,.32); white-space:nowrap;">Toggle Voice Input</span><span style="font:500 13px/1 var(--font-mono); color:rgba(147,166,190,.3);">⇧⌘V</span></div>
+        <div style="display:flex; align-items:center; gap:24px; padding:6px 10px; border-radius:5px;"><span style="flex:1; font:400 13.5px/1.4 var(--font-sans); color:rgba(233,238,245,.32); white-space:nowrap;">Attach File</span><span style="font:500 13px/1 var(--font-mono); color:rgba(147,166,190,.3);">⇧⌘A</span></div>
+        <div style="display:flex; align-items:center; gap:24px; padding:6px 10px; border-radius:5px;"><span style="flex:1; font:400 13.5px/1.4 var(--font-sans); color:rgba(233,238,245,.32); white-space:nowrap;">Relay to Another Session</span><span style="font:500 13px/1 var(--font-mono); color:rgba(147,166,190,.3);">⇧⌘F</span></div>
+        <div style="height:1px; margin:5px 9px; background:rgba(255,255,255,.08);"></div>
+        <div style="display:flex; align-items:center; gap:24px; padding:6px 10px; border-radius:5px;"><span style="flex:1; font:400 13.5px/1.4 var(--font-sans); color:rgba(233,238,245,.32); white-space:nowrap;">Toggle Model Menu</span><span style="font:500 13px/1 var(--font-mono); color:rgba(147,166,190,.3);">⇧⌘M</span></div>
+        <div style="display:flex; align-items:center; gap:24px; padding:6px 10px; border-radius:5px;"><span style="flex:1; font:400 13.5px/1.4 var(--font-sans); color:rgba(233,238,245,.32); white-space:nowrap;">Toggle Permission Mode Menu</span><span style="font:500 13px/1 var(--font-mono); color:rgba(147,166,190,.3);">⇧⌘P</span></div>
+      </div>
+      <p style="margin:12px 4px 0; font:400 12.5px/1.6 var(--font-sans); color:rgba(190,217,255,.5);">The menu item grays out and the shortcut does nothing — this is what “no undocumented dead switches” means: opening the menu bar shows users these capabilities exist and why they can't be used right now.</p>
+    </div>
+
+  </div>
+
+  <!-- ============ SECTION B — A 類就地入口特寫 ============ -->
+  <div style="position:relative; z-index:1; max-width:1560px; margin:52px auto 8px; display:flex; align-items:center; gap:10px;">
+    <span style="font:700 11px/1 var(--font-mono); letter-spacing:.2em; text-transform:uppercase; color:#5AA9FF;">◇ Category A · on-screen entry point + shortcut label</span>
+    <span style="flex:1; height:1px; background:linear-gradient(90deg, rgba(90,169,255,.4), transparent);"></span>
+  </div>
+  <p style="position:relative; z-index:1; max-width:880px; margin:0 auto 22px 0; padding-left:2px; font:400 14px/1.65 var(--font-sans); color:rgba(220,232,250,.58);">Besides the menu bar, the same action also has its shortcut labeled right next to the existing button, so both mouse and keyboard users can discover it. Below are close-ups of existing <span style="font-family:var(--font-mono); font-size:12.5px; color:#BFD9FF;">SessionListView</span> and <span style="font-family:var(--font-mono); font-size:12.5px; color:#BFD9FF;">ChatView</span> components.</p>
+
+  <div style="position:relative; z-index:1; max-width:1560px; margin:0 auto 22px; display:flex; gap:22px; flex-wrap:wrap; justify-content:center; align-items:stretch;">
+
+    <!-- new / settings -->
+    <div style="width:300px; box-sizing:border-box; position:relative; border-radius:16px; overflow:hidden; padding:20px; background:linear-gradient(160deg, rgba(16,27,45,.82), rgba(7,12,22,.78)); border:1px solid rgba(90,169,255,.3); box-shadow:0 0 40px -16px rgba(67,131,228,.45);">
+      <div style="position:absolute; inset:0; pointer-events:none; z-index:1; background-image:repeating-linear-gradient(0deg, rgba(120,180,255,.045) 0 1px, transparent 1px 3px);"></div>
+      <div style="position:relative; z-index:2;">
+        <div style="font:700 9.5px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:#5AA9FF; margin-bottom:16px;">SessionListView · Header</div>
+        <div style="display:flex; gap:16px; align-items:flex-start;">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:9px;">
+            <div style="width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#5AA9FF,#2F6FD6); box-shadow:0 0 22px -4px rgba(90,169,255,.8), inset 0 1px 0 rgba(255,255,255,.35);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </div>
+            <span style="display:inline-flex; align-items:center; gap:3px;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12.5px/1 var(--font-mono); color:#CFE4FF;">⌘</span><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12.5px/1 var(--font-mono); color:#CFE4FF;">N</span></span>
+            <span style="font:500 12px/1.3 var(--font-sans); color:rgba(190,217,255,.7);">New Session</span>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:center; gap:9px;">
+            <div style="width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(90,169,255,.08); border:1px solid rgba(90,169,255,.32);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8CC3FF" stroke-width="2" stroke-linecap="round"><line x1="4" y1="8" x2="20" y2="8"></line><line x1="4" y1="16" x2="20" y2="16"></line><circle cx="9" cy="8" r="2.6" fill="#0a1220"></circle><circle cx="15" cy="16" r="2.6" fill="#0a1220"></circle></svg>
+            </div>
+            <span style="display:inline-flex; align-items:center; gap:3px;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12.5px/1 var(--font-mono); color:#CFE4FF;">⌘</span><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 13px/1 var(--font-mono); color:#CFE4FF;">,</span></span>
+            <span style="font:500 12px/1.3 var(--font-sans); color:rgba(190,217,255,.7);">Settings</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- session cards ⌘1-9 -->
+    <div style="width:360px; box-sizing:border-box; position:relative; border-radius:16px; overflow:hidden; padding:20px; background:linear-gradient(160deg, rgba(16,27,45,.82), rgba(7,12,22,.78)); border:1px solid rgba(90,169,255,.3); box-shadow:0 0 40px -16px rgba(67,131,228,.45);">
+      <div style="position:absolute; inset:0; pointer-events:none; z-index:1; background-image:repeating-linear-gradient(0deg, rgba(120,180,255,.045) 0 1px, transparent 1px 3px);"></div>
+      <div style="position:relative; z-index:2;">
+        <div style="font:700 9.5px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:#5AA9FF; margin-bottom:14px;">Session cards · ⌘1–9 follow list order</div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div style="position:relative; overflow:hidden; border-radius:12px; padding:13px 14px 13px 18px; display:flex; align-items:center; gap:12px; background:rgba(120,180,255,.06); border:1px solid rgba(120,180,255,.22);">
+            <div style="position:absolute; left:0; top:0; bottom:0; width:4px; background:#5AA9FF; box-shadow:0 0 14px 1px rgba(90,169,255,.85);"></div>
+            <span style="display:inline-flex; align-items:center; gap:3px; flex-shrink:0;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12px/1 var(--font-mono); color:#CFE4FF;">⌘</span><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12.5px/1 var(--font-mono); color:#CFE4FF;">1</span></span>
+            <span style="flex:1; min-width:0; font:700 15px/1.3 var(--font-sans); color:#EAF2FF; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Refactor WS reconnect</span>
+            <span style="width:7px; height:7px; border-radius:50%; background:#5AA9FF; box-shadow:0 0 7px 1px rgba(90,169,255,.9); flex-shrink:0; animation:vc-breathe 1.5s ease-in-out infinite;"></span>
+          </div>
+          <div style="position:relative; overflow:hidden; border-radius:12px; padding:13px 14px 13px 18px; display:flex; align-items:center; gap:12px; background:rgba(255,157,77,.06); border:1px solid rgba(255,157,77,.24);">
+            <div style="position:absolute; left:0; top:0; bottom:0; width:4px; background:#FF9D4D; box-shadow:0 0 14px 1px rgba(255,157,77,.8);"></div>
+            <span style="display:inline-flex; align-items:center; gap:3px; flex-shrink:0;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12px/1 var(--font-mono); color:#CFE4FF;">⌘</span><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12.5px/1 var(--font-mono); color:#CFE4FF;">2</span></span>
+            <span style="flex:1; min-width:0; font:700 15px/1.3 var(--font-sans); color:#EAF2FF; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Fix permission broker race</span>
+            <span style="width:7px; height:7px; border-radius:50%; background:#FF9D4D; flex-shrink:0; animation:vc-orb-warn 2.2s ease-in-out infinite;"></span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; padding:2px 2px 0;">
+            <span style="font:500 12px/1.5 var(--font-sans); color:rgba(190,217,255,.5);">⌘3–⌘9 map to the remaining sessions; beyond 9 sessions it stops at ⌘9.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- chat header menus ⌘⇧M / ⌘⇧P -->
+    <div style="width:340px; box-sizing:border-box; position:relative; border-radius:16px; overflow:hidden; padding:20px; background:linear-gradient(160deg, rgba(16,27,45,.82), rgba(7,12,22,.78)); border:1px solid rgba(90,169,255,.3); box-shadow:0 0 40px -16px rgba(67,131,228,.45);">
+      <div style="position:absolute; inset:0; pointer-events:none; z-index:1; background-image:repeating-linear-gradient(0deg, rgba(120,180,255,.045) 0 1px, transparent 1px 3px);"></div>
+      <div style="position:relative; z-index:2;">
+        <div style="font:700 9.5px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:#5AA9FF; margin-bottom:16px;">ChatView · Header Menus</div>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="display:inline-flex; align-items:center; gap:6px; font:600 12px/1 var(--font-mono); color:#8CC3FF; background:rgba(90,169,255,.12); border:1px solid rgba(90,169,255,.4); padding:8px 10px 8px 12px; border-radius:100px; box-shadow:0 0 12px -2px rgba(90,169,255,.5);">sonnet-4.5<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8CC3FF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+            <span style="flex:1;"></span>
+            <span style="display:inline-flex; align-items:center; gap:3px;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12.5px/1 var(--font-mono); color:#CFE4FF;">⌘</span><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12.5px/1 var(--font-mono); color:#CFE4FF;">⇧</span><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12.5px/1 var(--font-mono); color:#CFE4FF;">M</span></span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:8px; background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.4); box-shadow:0 0 14px -4px rgba(90,169,255,.5);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8CC3FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"></path></svg><span style="font:600 12px/1 var(--font-mono); color:#8CC3FF;">MANUAL</span></span>
+            <span style="flex:1;"></span>
+            <span style="display:inline-flex; align-items:center; gap:3px;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12.5px/1 var(--font-mono); color:#CFE4FF;">⌘</span><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12.5px/1 var(--font-mono); color:#CFE4FF;">⇧</span><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12.5px/1 var(--font-mono); color:#CFE4FF;">P</span></span>
+          </div>
+          <p style="margin:0; font:400 12px/1.6 var(--font-sans); color:rgba(190,217,255,.5);">The menu's expanded state is controlled by a <span style="font-family:var(--font-mono); font-size:11.5px; color:#BFD9FF;">Binding&lt;Bool&gt;</span> held by ChatView; mouse clicks and the shortcut toggle the same state.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- input voice/attach ⌘⇧V / ⌘⇧A -->
+    <div style="width:300px; box-sizing:border-box; position:relative; border-radius:16px; overflow:hidden; padding:20px; background:linear-gradient(160deg, rgba(16,27,45,.82), rgba(7,12,22,.78)); border:1px solid rgba(90,169,255,.3); box-shadow:0 0 40px -16px rgba(67,131,228,.45);">
+      <div style="position:absolute; inset:0; pointer-events:none; z-index:1; background-image:repeating-linear-gradient(0deg, rgba(120,180,255,.045) 0 1px, transparent 1px 3px);"></div>
+      <div style="position:relative; z-index:2;">
+        <div style="font:700 9.5px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:#5AA9FF; margin-bottom:16px;">ChatView · Input Bar</div>
+        <div style="display:flex; gap:16px; align-items:flex-start;">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:9px;">
+            <div style="width:52px; height:52px; border-radius:12px; background:rgba(90,169,255,.08); border:1px solid rgba(90,169,255,.32); display:flex; align-items:center; justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8CC3FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"></path><path d="M19 11a7 7 0 0 1-14 0"></path><line x1="12" y1="18" x2="12" y2="22"></line><line x1="8" y1="22" x2="16" y2="22"></line></svg>
+            </div>
+            <span style="display:inline-flex; align-items:center; gap:3px;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12px/1 var(--font-mono); color:#CFE4FF;">⌘</span><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12px/1 var(--font-mono); color:#CFE4FF;">⇧</span><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12.5px/1 var(--font-mono); color:#CFE4FF;">V</span></span>
+            <span style="font:500 12px/1.3 var(--font-sans); color:rgba(190,217,255,.7);">Voice Input</span>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:center; gap:9px;">
+            <div style="width:52px; height:52px; border-radius:12px; background:rgba(90,169,255,.08); border:1px solid rgba(90,169,255,.32); display:flex; align-items:center; justify-content:center;">
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#8CC3FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8.5l-9.2 9.2a4.5 4.5 0 0 1-6.4-6.4l9.2-9.2a3 3 0 0 1 4.2 4.2l-8.6 8.6a1.5 1.5 0 0 1-2.1-2.1l7.9-7.9"></path></svg>
+            </div>
+            <span style="display:inline-flex; align-items:center; gap:3px;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12px/1 var(--font-mono); color:#CFE4FF;">⌘</span><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12px/1 var(--font-mono); color:#CFE4FF;">⇧</span><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12.5px/1 var(--font-mono); color:#CFE4FF;">A</span></span>
+            <span style="font:500 12px/1.3 var(--font-sans); color:rgba(190,217,255,.7);">Attach File</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- relay ⌘⇧F (NEW) -->
+    <div style="width:340px; box-sizing:border-box; position:relative; border-radius:16px; overflow:hidden; padding:20px; background:linear-gradient(160deg, rgba(16,27,45,.82), rgba(7,12,22,.78)); border:1px solid rgba(90,169,255,.3); box-shadow:0 0 40px -16px rgba(67,131,228,.45);">
+      <div style="position:absolute; inset:0; pointer-events:none; z-index:1; background-image:repeating-linear-gradient(0deg, rgba(120,180,255,.045) 0 1px, transparent 1px 3px);"></div>
+      <div style="position:relative; z-index:2;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+          <span style="font:700 9.5px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:#5AA9FF;">ChatView · Input Bar (next to the paperclip)</span>
+          <span style="font:700 7.5px/1 var(--font-mono); letter-spacing:.1em; color:#04070d; background:#5AA9FF; padding:3px 6px; border-radius:100px;">NEW</span>
+        </div>
+        <div style="display:flex; gap:16px; align-items:flex-start;">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:9px; flex-shrink:0;">
+            <div style="width:52px; height:52px; border-radius:12px; background:rgba(90,169,255,.16); border:1px solid rgba(90,169,255,.5); display:flex; align-items:center; justify-content:center; box-shadow:0 0 18px -4px rgba(90,169,255,.7);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#BFD9FF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13"></path><path d="M14 5l3 3-3 3"></path><path d="M20 16H7"></path><path d="M10 13l-3 3 3 3"></path></svg>
+            </div>
+            <span style="display:inline-flex; align-items:center; gap:3px;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12px/1 var(--font-mono); color:#CFE4FF; white-space:nowrap;">⌘</span><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12px/1 var(--font-mono); color:#CFE4FF; white-space:nowrap;">⇧</span><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:0 0 10px -3px rgba(90,169,255,.55), inset 0 1px 0 rgba(255,255,255,.18); font:600 12.5px/1 var(--font-mono); color:#CFE4FF; white-space:nowrap;">F</span></span>
+            <span style="font:500 12px/1.3 var(--font-sans); color:rgba(190,217,255,.7);">Relay to Session</span>
+          </div>
+          <div style="flex:1; min-width:0;">
+            <p style="margin:0 0 10px; font:400 12.5px/1.65 var(--font-sans); color:rgba(190,217,255,.62);">Opens the “Relay to Another Session” panel — that's the <span style="color:#BFD9FF;">⇄</span> icon next to the paperclip. Shares <span style="font-family:var(--font-mono); font-size:11.5px; color:#BFD9FF;">ChatActions</span> with ⌘⇧A.</p>
+            <div style="display:flex; align-items:flex-start; gap:8px; padding:9px 11px; border-radius:9px; background:rgba(255,157,77,.08); border:1px solid rgba(255,157,77,.28);">
+              <span style="width:6px; height:6px; border-radius:50%; background:#FF9D4D; flex-shrink:0; margin-top:4px; box-shadow:0 0 6px 1px rgba(255,157,77,.7);"></span>
+              <span style="font:400 11.5px/1.55 var(--font-sans); color:#FFCF9E;">One extra disabled condition: when there's no other session to send to (<span style="font-family:var(--font-mono); font-size:11px;">relayTargets is empty</span>), it's disabled even with a focused session.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ SECTION C — B 類 onKeyPress ============ -->
+  <div style="position:relative; z-index:1; max-width:1560px; margin:52px auto 8px; display:flex; align-items:center; gap:10px;">
+    <span style="font:700 11px/1 var(--font-mono); letter-spacing:.2em; text-transform:uppercase; color:#3EE2C9;">◇ Category B · View-level onKeyPress (focus-related)</span>
+    <span style="flex:1; height:1px; background:linear-gradient(90deg, rgba(62,226,201,.4), transparent);"></span>
+    <span style="font:600 11px/1 var(--font-mono); color:#3EE2C9; background:rgba(62,226,201,.1); border:1px solid rgba(62,226,201,.35); padding:5px 10px; border-radius:100px;">visionOS ✓</span>
+  </div>
+  <p style="position:relative; z-index:1; max-width:880px; margin:0 auto 22px 0; padding-left:2px; font:400 14px/1.65 var(--font-sans); color:rgba(220,232,250,.58);">These keys are tightly coupled to the “current keyboard focus / UI state”, so they don't go into the menu bar and stay handled by <span style="font-family:var(--font-mono); font-size:12.5px; color:#BFD9FF;">.onKeyPress</span> in the corresponding View; the card buttons' own <span style="font-family:var(--font-mono); font-size:12.5px; color:#BFD9FF;">.keyboardShortcut</span> also works on visionOS with a connected Bluetooth keyboard.</p>
+
+  <div style="position:relative; z-index:1; max-width:1560px; margin:0 auto 22px; display:flex; gap:22px; flex-wrap:wrap; justify-content:center; align-items:flex-start;">
+
+    <!-- input bar hints -->
+    <div style="width:470px; max-width:94vw; box-sizing:border-box; position:relative; border-radius:16px; overflow:hidden; padding:20px; background:linear-gradient(160deg, rgba(16,27,45,.82), rgba(7,12,22,.78)); border:1px solid rgba(90,169,255,.3); box-shadow:0 0 40px -16px rgba(67,131,228,.45);">
+      <div style="position:absolute; inset:0; pointer-events:none; z-index:1; background-image:repeating-linear-gradient(0deg, rgba(120,180,255,.045) 0 1px, transparent 1px 3px);"></div>
+      <div style="position:relative; z-index:2;">
+        <div style="font:700 9.5px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:#5AA9FF; margin-bottom:14px;">Input bar · send / newline / interrupt</div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="flex:1; background:rgba(6,12,22,.7); border:1px solid rgba(90,169,255,.32); border-radius:10px; padding:11px 14px; display:flex; align-items:center; gap:9px; box-shadow:inset 0 0 24px -14px rgba(90,169,255,.6);">
+            <span style="font:700 11px/1 var(--font-mono); color:#8CC3FF; background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.4); padding:4px 7px; border-radius:6px; flex-shrink:0;">/</span>
+            <span style="flex:1; font:400 14px/1.4 var(--font-sans); color:#DCE8FA;">Fix SessionSocket's reconnect order</span>
+            <span style="display:inline-block; width:2px; height:15px; background:#5AA9FF; box-shadow:0 0 6px rgba(90,169,255,.9); animation:vc-caret 1s step-end infinite;"></span>
+          </div>
+          <div style="flex-shrink:0; width:48px; height:48px; border-radius:11px; background:linear-gradient(180deg,#5AA9FF,#2F6FD6); display:flex; align-items:center; justify-content:center; box-shadow:0 0 22px -4px rgba(90,169,255,.8), inset 0 1px 0 rgba(255,255,255,.35);"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M3 11.5L21 4L13.5 21.5L11.3 14.7L3 11.5Z"></path></svg></div>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;">
+          <span style="display:inline-flex; align-items:center; gap:7px; padding:6px 11px 6px 7px; border-radius:100px; background:rgba(90,169,255,.08); border:1px solid rgba(90,169,255,.28); font:600 12px/1 var(--font-sans); color:#BFD9FF;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; padding:0 5px; box-sizing:border-box; border-radius:5px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:inset 0 1px 0 rgba(255,255,255,.18); font:600 12px/1 var(--font-mono); color:#CFE4FF;">↩</span>Send message</span>
+          <span style="display:inline-flex; align-items:center; gap:7px; padding:6px 11px 6px 7px; border-radius:100px; background:rgba(90,169,255,.08); border:1px solid rgba(90,169,255,.28); font:600 12px/1 var(--font-sans); color:#BFD9FF;"><span style="display:inline-flex; align-items:center; gap:2px;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; padding:0 5px; box-sizing:border-box; border-radius:5px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:inset 0 1px 0 rgba(255,255,255,.18); font:600 11px/1 var(--font-mono); color:#CFE4FF;">⇧</span><span style="display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; padding:0 5px; box-sizing:border-box; border-radius:5px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:inset 0 1px 0 rgba(255,255,255,.18); font:600 12px/1 var(--font-mono); color:#CFE4FF;">↩</span></span>New line</span>
+          <span style="display:inline-flex; align-items:center; gap:7px; padding:6px 11px 6px 7px; border-radius:100px; background:rgba(255,122,114,.09); border:1px solid rgba(255,122,114,.32); font:600 12px/1 var(--font-sans); color:#FF9D97;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; padding:0 5px; box-sizing:border-box; border-radius:5px; background:linear-gradient(180deg,rgba(255,122,114,.2),rgba(255,122,114,.05)); border:1px solid rgba(255,122,114,.5); box-shadow:inset 0 1px 0 rgba(255,255,255,.14); font:600 11px/1 var(--font-mono); color:#FFC2BC;">⎋</span>Interrupt response (contextual)</span>
+        </div>
+        <p style="margin:12px 0 0; font:400 12px/1.6 var(--font-sans); color:rgba(190,217,255,.5);">Return/Shift+Return are existing behavior; Esc is new in this pass and its meaning depends on context — see the priority order on the right.</p>
+      </div>
+    </div>
+
+    <!-- Esc contextual resolver (interactive) -->
+    <div style="width:470px; max-width:94vw; box-sizing:border-box; position:relative; border-radius:16px; overflow:hidden; padding:20px; background:linear-gradient(160deg, rgba(16,27,45,.86), rgba(7,12,22,.82)); border:1px solid rgba(90,169,255,.34); box-shadow:0 0 44px -14px rgba(67,131,228,.5);">
+      <div style="position:absolute; inset:0; pointer-events:none; z-index:1; background-image:repeating-linear-gradient(0deg, rgba(120,180,255,.045) 0 1px, transparent 1px 3px);"></div>
+      <div style="position:relative; z-index:2;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+          <span style="display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:26px; padding:0 7px; box-sizing:border-box; border-radius:7px; background:linear-gradient(180deg,rgba(90,169,255,.24),rgba(90,169,255,.06)); border:1px solid rgba(90,169,255,.55); box-shadow:0 0 12px -3px rgba(90,169,255,.6), inset 0 1px 0 rgba(255,255,255,.2); font:600 13px/1 var(--font-mono); color:#CFE4FF;">⎋</span>
+          <span style="font:700 9.5px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:#5AA9FF;">Esc · context priority (click below to toggle state)</span>
+        </div>
+        <!-- context toggles -->
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div onClick="{{toggleEscPalette}}" style="display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:10px; cursor:pointer; background:{{cPalette.bg}}; border:1px solid {{cPalette.border}};">
+            <span style="width:9px; height:9px; border-radius:50%; flex-shrink:0; background:{{cPalette.dot}}; box-shadow:{{cPalette.glow}};"></span>
+            <span style="flex:1; font:600 13px/1.3 var(--font-sans); color:{{cPalette.text}};">① Slash palette open</span>
+            <span style="font:600 10px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:{{cPalette.tag}};">{{cPalette.state}}</span>
+          </div>
+          <div onClick="{{toggleEscCard}}" style="display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:10px; cursor:pointer; background:{{cCard.bg}}; border:1px solid {{cCard.border}};">
+            <span style="width:9px; height:9px; border-radius:50%; flex-shrink:0; background:{{cCard.dot}}; box-shadow:{{cCard.glow}};"></span>
+            <span style="flex:1; font:600 13px/1.3 var(--font-sans); color:{{cCard.text}};">② Permission card showing</span>
+            <span style="font:600 10px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:{{cCard.tag}};">{{cCard.state}}</span>
+          </div>
+          <div onClick="{{toggleEscStream}}" style="display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:10px; cursor:pointer; background:{{cStream.bg}}; border:1px solid {{cStream.border}};">
+            <span style="width:9px; height:9px; border-radius:50%; flex-shrink:0; background:{{cStream.dot}}; box-shadow:{{cStream.glow}};"></span>
+            <span style="flex:1; font:600 13px/1.3 var(--font-sans); color:{{cStream.text}};">③ Response streaming</span>
+            <span style="font:600 10px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:{{cStream.tag}};">{{cStream.state}}</span>
+          </div>
+        </div>
+        <!-- resolved readout -->
+        <div style="margin-top:14px; padding:14px; border-radius:12px; background:{{esc.bg}}; border:1px solid {{esc.border}}; display:flex; align-items:center; gap:12px;">
+          <span style="display:inline-flex; align-items:center; justify-content:center; min-width:30px; height:30px; padding:0 8px; box-sizing:border-box; border-radius:8px; background:rgba(0,0,0,.25); border:1px solid {{esc.border}}; font:600 15px/1 var(--font-mono); color:{{esc.color}};">⎋</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{esc.color}}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><line x1="5" y1="12" x2="17" y2="12"></line><polyline points="12 6 18 12 12 18"></polyline></svg>
+          <div style="flex:1; min-width:0;">
+            <div style="font:700 15px/1.25 var(--font-sans); color:{{esc.color}};">{{esc.label}}</div>
+            <div style="font:400 12px/1.4 var(--font-mono); color:rgba(220,232,250,.55); margin-top:2px;">{{esc.code}}</div>
+          </div>
+        </div>
+        <p style="margin:11px 0 0; font:400 11.5px/1.6 var(--font-sans); color:rgba(190,217,255,.5);">Checked in order within the same onKeyPress, mutually exclusive: when the palette is open, Esc only closes the palette — it won't also interrupt the response.</p>
+      </div>
+    </div>
+
+    <!-- slash palette esc -->
+    <div style="width:360px; max-width:94vw; box-sizing:border-box; position:relative; border-radius:16px; overflow:hidden; padding:18px; background:linear-gradient(160deg, rgba(16,27,45,.82), rgba(7,12,22,.78)); border:1px solid rgba(90,169,255,.3); box-shadow:0 0 40px -16px rgba(67,131,228,.45);">
+      <div style="position:absolute; inset:0; pointer-events:none; z-index:1; background-image:repeating-linear-gradient(0deg, rgba(120,180,255,.045) 0 1px, transparent 1px 3px);"></div>
+      <div style="position:relative; z-index:2;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <span style="font:700 9.5px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:#5AA9FF;">Slash palette · close</span>
+          <span style="display:inline-flex; align-items:center; gap:6px; font:600 11px/1 var(--font-sans); color:#BFD9FF;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; padding:0 6px; box-sizing:border-box; border-radius:5px; background:linear-gradient(180deg,rgba(90,169,255,.22),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.5); box-shadow:inset 0 1px 0 rgba(255,255,255,.18); font:600 11px/1 var(--font-mono); color:#CFE4FF;">⎋</span>Close</span>
+        </div>
+        <div style="border-radius:12px; padding:6px; background:rgba(8,14,24,.9); border:1px solid rgba(90,169,255,.28);">
+          <div style="display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:8px; background:rgba(90,169,255,.12);"><span style="width:18px; height:18px; border-radius:6px; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.35);"><span style="width:5px; height:5px; border-radius:50%; background:#5AA9FF; box-shadow:0 0 6px 1px rgba(90,169,255,.8);"></span></span><span style="flex:1; font:600 13px/1.3 var(--font-mono); color:#EAF2FF;">/revert-file</span></div>
+          <div style="display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:8px;"><span style="width:18px; height:18px; border-radius:6px; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.35);"><span style="width:5px; height:5px; border-radius:50%; background:#5AA9FF; box-shadow:0 0 6px 1px rgba(90,169,255,.8);"></span></span><span style="flex:1; font:600 13px/1.3 var(--font-mono); color:#EAF2FF;">/review</span></div>
+        </div>
+        <p style="margin:11px 0 0; font:400 12px/1.6 var(--font-sans); color:rgba(190,217,255,.5);">When the palette is open, Esc just collapses the panel back to the input field — it doesn't affect the response.</p>
+      </div>
+    </div>
+
+    <!-- permission card ↩ / ⎋ -->
+    <div style="width:430px; max-width:94vw; box-sizing:border-box; position:relative; border-radius:16px; overflow:hidden; padding:20px; background:linear-gradient(160deg, rgba(46,30,12,.9), rgba(20,14,8,.86)); border:1px solid rgba(255,157,77,.5); box-shadow:0 0 50px -14px rgba(255,129,26,.5), inset 0 0 60px -30px rgba(255,157,77,.6);">
+      <div style="position:absolute; inset:0; pointer-events:none; z-index:1; background-image:repeating-linear-gradient(0deg, rgba(255,180,110,.05) 0 1px, transparent 1px 3px);"></div>
+      <div style="position:relative; z-index:2;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+          <span style="width:34px; height:34px; border-radius:9px; background:rgba(255,157,77,.16); border:1px solid rgba(255,157,77,.5); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 0 18px -4px rgba(255,157,77,.7);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFB877" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12.5V6a1.5 1.5 0 0 1 3 0v5"></path><path d="M11 11V4.5a1.5 1.5 0 0 1 3 0V11"></path><path d="M14 11.2V5.5a1.5 1.5 0 0 1 3 0V12"></path><path d="M17 12V8.5a1.5 1.5 0 0 1 3 0V15c0 4-2.5 7-6.5 7-3 0-4.5-1-6-3l-3-4.5c-.6-1 .2-2.2 1.3-2 .5.1 1 .4 1.3.9L8 12.5"></path></svg></span>
+          <div style="flex:1; min-width:0;">
+            <div style="font:700 9px/1 var(--font-mono); letter-spacing:.2em; text-transform:uppercase; color:#FF9D4D; margin-bottom:4px;">⚠ Permission request · focus is already on the card</div>
+            <span style="font:700 15px/1.3 var(--font-sans); color:#FFE7CE;">Claude wants to use a tool: Bash</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:12px;">
+          <div style="flex:1; height:52px; border-radius:11px; background:rgba(255,122,114,.14); border:1px solid rgba(255,122,114,.5); display:flex; align-items:center; justify-content:center; gap:9px; box-shadow:0 0 20px -6px rgba(255,122,114,.5);">
+            <span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(255,122,114,.24),rgba(255,122,114,.06)); border:1px solid rgba(255,122,114,.55); box-shadow:inset 0 1px 0 rgba(255,255,255,.16); font:600 12px/1 var(--font-mono); color:#FFC2BC;">⎋</span>
+            <span style="font:700 15px/1 var(--font-sans); color:#FF9D97;">Deny</span>
+          </div>
+          <div style="flex:1; height:52px; border-radius:11px; background:linear-gradient(180deg,#5AA9FF,#2F6FD6); display:flex; align-items:center; justify-content:center; gap:9px; box-shadow:0 0 24px -4px rgba(90,169,255,.85), inset 0 1px 0 rgba(255,255,255,.4);">
+            <span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.4); box-shadow:inset 0 1px 0 rgba(255,255,255,.3); font:600 12px/1 var(--font-mono); color:#fff;">↩</span>
+            <span style="font:700 15px/1 var(--font-sans); color:#fff;">Approve</span>
+          </div>
+        </div>
+        <p style="margin:12px 0 0; font:400 12px/1.6 var(--font-sans); color:rgba(255,220,190,.6);">When the card appears, keyboard focus automatically moves to it and no longer goes to the chat input: ↩ approve (allow), ⎋ deny.</p>
+      </div>
+    </div>
+
+    <!-- ask_user single-question (number keys) -->
+    <div style="width:430px; max-width:94vw; box-sizing:border-box; position:relative; border-radius:16px; overflow:hidden; padding:20px; background:linear-gradient(160deg, rgba(16,27,45,.84), rgba(7,12,22,.8)); border:1px solid rgba(90,169,255,.34); box-shadow:0 0 44px -14px rgba(67,131,228,.5);">
+      <div style="position:absolute; inset:0; pointer-events:none; z-index:1; background-image:repeating-linear-gradient(0deg, rgba(120,180,255,.045) 0 1px, transparent 1px 3px);"></div>
+      <div style="position:relative; z-index:2;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+          <span style="font:700 9px/1 var(--font-mono); letter-spacing:.2em; text-transform:uppercase; color:#5AA9FF;">ASKUSERQUESTION · AWAITING YOUR CHOICE</span>
+          <span style="flex:1;"></span>
+          <span style="font:600 9px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:#3EE2C9; background:rgba(62,226,201,.1); border:1px solid rgba(62,226,201,.35); padding:4px 8px; border-radius:100px;">Single question · single choice</span>
+        </div>
+        <div style="font:600 14.5px/1.4 var(--font-sans); color:#EAF2FF; margin-bottom:12px;">Which reconnect compensation strategy should we use?</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; align-items:center; gap:12px; padding:11px 13px; border-radius:10px; background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.45);">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; box-sizing:border-box; border-radius:6px; flex-shrink:0; background:linear-gradient(180deg,rgba(90,169,255,.28),rgba(90,169,255,.08)); border:1px solid rgba(90,169,255,.6); box-shadow:0 0 10px -3px rgba(90,169,255,.6), inset 0 1px 0 rgba(255,255,255,.2); font:600 13px/1 var(--font-mono); color:#DCEBFF;">1</span>
+            <span style="flex:1; font:600 14px/1.35 var(--font-sans); color:#EAF2FF;">Exponential backoff retry</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5AA9FF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px; padding:11px 13px; border-radius:10px; background:rgba(120,180,255,.05); border:1px solid rgba(120,180,255,.2);">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; box-sizing:border-box; border-radius:6px; flex-shrink:0; background:linear-gradient(180deg,rgba(90,169,255,.18),rgba(90,169,255,.04)); border:1px solid rgba(90,169,255,.4); box-shadow:inset 0 1px 0 rgba(255,255,255,.14); font:600 13px/1 var(--font-mono); color:#BFD9FF;">2</span>
+            <span style="flex:1; font:500 14px/1.35 var(--font-sans); color:#DCE8FA;">Event replay</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px; padding:11px 13px; border-radius:10px; background:rgba(120,180,255,.05); border:1px solid rgba(120,180,255,.2);">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; box-sizing:border-box; border-radius:6px; flex-shrink:0; background:linear-gradient(180deg,rgba(90,169,255,.18),rgba(90,169,255,.04)); border:1px solid rgba(90,169,255,.4); box-shadow:inset 0 1px 0 rgba(255,255,255,.14); font:600 13px/1 var(--font-mono); color:#BFD9FF;">3</span>
+            <span style="flex:1; font:500 14px/1.35 var(--font-sans); color:#DCE8FA;">Do both</span>
+          </div>
+        </div>
+        <p style="margin:12px 0 0; font:400 12px/1.6 var(--font-sans); color:rgba(190,217,255,.55);">Pressing number keys <b style="color:#BFD9FF; font-weight:700;">1–9</b> selects and sends immediately — <b style="color:#BFD9FF; font-weight:700;">only</b> when <span style="font-family:var(--font-mono); font-size:11.5px; color:#BFD9FF;">questions.count == 1</span> and <span style="font-family:var(--font-mono); font-size:11.5px; color:#BFD9FF;">multiSelect == false</span>.</p>
+      </div>
+    </div>
+
+    <!-- ask_user multi (pointer only) -->
+    <div style="width:360px; max-width:94vw; box-sizing:border-box; position:relative; border-radius:16px; overflow:hidden; padding:20px; background:linear-gradient(160deg, rgba(16,27,45,.78), rgba(7,12,22,.74)); border:1px solid rgba(140,178,201,.28); box-shadow:0 0 40px -18px rgba(67,131,228,.35);">
+      <div style="position:absolute; inset:0; pointer-events:none; z-index:1; background-image:repeating-linear-gradient(0deg, rgba(120,180,255,.04) 0 1px, transparent 1px 3px);"></div>
+      <div style="position:relative; z-index:2;">
+        <div style="display:inline-flex; align-items:center; gap:8px; margin-bottom:14px; padding:7px 12px; border-radius:100px; background:rgba(140,178,201,.1); border:1px solid rgba(140,178,201,.32);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#AFC0D4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2.5"></rect><line x1="7" y1="10" x2="7" y2="10"></line><line x1="11" y1="10" x2="11" y2="10"></line><line x1="15" y1="10" x2="15" y2="10"></line><line x1="8" y1="14" x2="16" y2="14"></line></svg>
+          <span style="font:600 11px/1 var(--font-mono); letter-spacing:.06em; color:#C6D4E4;">Multi-question / multi-select · pointer only</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px; opacity:.5;">
+          <div style="font:600 13px/1.3 var(--font-sans); color:#DCE8FA;">Q1 · Scope (multi-select)</div>
+          <div style="display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:9px; background:rgba(120,180,255,.05); border:1px solid rgba(120,180,255,.18);"><span style="width:18px; height:18px; border-radius:5px; border:1.6px solid rgba(140,195,255,.6); box-sizing:border-box; flex-shrink:0;"></span><span style="font:500 13px/1.3 var(--font-sans); color:#DCE8FA;">Add unit tests</span></div>
+          <div style="display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:9px; background:rgba(120,180,255,.05); border:1px solid rgba(120,180,255,.18);"><span style="width:18px; height:18px; border-radius:5px; border:1.6px solid rgba(140,195,255,.6); box-sizing:border-box; flex-shrink:0;"></span><span style="font:500 13px/1.3 var(--font-sans); color:#DCE8FA;">Update README</span></div>
+        </div>
+        <p style="margin:14px 0 0; font:400 12px/1.6 var(--font-sans); color:rgba(190,217,255,.5);">Multi-question or multi-select cards don't take keyboard input at all — answer with mouse/touch only, to avoid ambiguous number-key semantics.</p>
+      </div>
+    </div>
+
+    <!-- relay sheet keys ⎋ / ↩ (NEW) -->
+    <div style="width:430px; max-width:94vw; box-sizing:border-box; position:relative; border-radius:16px; overflow:hidden; padding:20px; background:linear-gradient(160deg, rgba(16,27,45,.84), rgba(7,12,22,.8)); border:1px solid rgba(90,169,255,.32); box-shadow:0 0 44px -14px rgba(67,131,228,.5);">
+      <div style="position:absolute; inset:0; pointer-events:none; z-index:1; background-image:repeating-linear-gradient(0deg, rgba(120,180,255,.045) 0 1px, transparent 1px 3px);"></div>
+      <div style="position:relative; z-index:2;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8CC3FF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13"></path><path d="M14 5l3 3-3 3"></path><path d="M20 16H7"></path><path d="M10 13l-3 3 3 3"></path></svg>
+          <span style="font:700 9.5px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:#5AA9FF;">Relay panel · sheet's built-in keys</span>
+          <span style="flex:1;"></span>
+          <span style="font:700 7.5px/1 var(--font-mono); letter-spacing:.1em; color:#04070d; background:#5AA9FF; padding:3px 6px; border-radius:100px;">NEW</span>
+        </div>
+        <div style="border-radius:12px; overflow:hidden; border:1px solid rgba(90,169,255,.34); background:rgba(8,14,24,.75);">
+          <div style="display:flex; align-items:center; gap:9px; padding:11px 13px; border-bottom:1px solid rgba(90,169,255,.2);">
+            <span style="font:700 9px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:#8CC3FF;">Select target</span>
+            <span style="flex:1;"></span>
+            <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 10px 5px 6px; border-radius:8px; background:rgba(62,226,201,.06); border:1px solid rgba(62,226,201,.28); font:600 11px/1 var(--font-sans); color:#AEF0E2;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 5px; box-sizing:border-box; border-radius:5px; background:linear-gradient(180deg,rgba(62,226,201,.18),rgba(62,226,201,.04)); border:1px solid rgba(62,226,201,.45); box-shadow:inset 0 1px 0 rgba(255,255,255,.14); font:600 11px/1 var(--font-mono); color:#AEF0E2;">⎋</span>Close</span>
+          </div>
+          <div style="padding:11px 13px; display:flex; align-items:flex-end; gap:9px;">
+            <div style="flex:1; background:rgba(6,12,22,.7); border:1px solid rgba(90,169,255,.32); border-radius:9px; padding:9px 12px; font:400 13px/1.4 var(--font-sans); color:rgba(190,217,255,.5);">Type the message to relay…</div>
+            <span style="display:inline-flex; align-items:center; gap:7px; padding:8px 12px 8px 8px; border-radius:9px; background:linear-gradient(180deg,#5AA9FF,#2F6FD6); box-shadow:0 0 16px -5px rgba(90,169,255,.8); font:700 12.5px/1 var(--font-sans); color:#fff;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 5px; box-sizing:border-box; border-radius:5px; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.4); box-shadow:inset 0 1px 0 rgba(255,255,255,.3); font:600 11px/1 var(--font-mono); color:#fff;">↩</span>Relay</span>
+          </div>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;">
+          <span style="display:inline-flex; align-items:center; gap:7px; padding:6px 11px 6px 7px; border-radius:100px; background:rgba(62,226,201,.08); border:1px solid rgba(62,226,201,.3); font:600 12px/1 var(--font-sans); color:#AEF0E2;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; padding:0 5px; box-sizing:border-box; border-radius:5px; background:linear-gradient(180deg,rgba(62,226,201,.18),rgba(62,226,201,.04)); border:1px solid rgba(62,226,201,.45); box-shadow:inset 0 1px 0 rgba(255,255,255,.14); font:600 11px/1 var(--font-mono); color:#AEF0E2;">⎋</span>Close panel</span>
+          <span style="display:inline-flex; align-items:center; gap:7px; padding:6px 11px 6px 7px; border-radius:100px; background:rgba(62,226,201,.08); border:1px solid rgba(62,226,201,.3); font:600 12px/1 var(--font-sans); color:#AEF0E2;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; padding:0 5px; box-sizing:border-box; border-radius:5px; background:linear-gradient(180deg,rgba(62,226,201,.18),rgba(62,226,201,.04)); border:1px solid rgba(62,226,201,.45); box-shadow:inset 0 1px 0 rgba(255,255,255,.14); font:600 11px/1 var(--font-mono); color:#AEF0E2;">↩</span>Send</span>
+          <span style="display:inline-flex; align-items:center; gap:7px; padding:6px 11px 6px 7px; border-radius:100px; background:rgba(62,226,201,.08); border:1px solid rgba(62,226,201,.3); font:600 12px/1 var(--font-sans); color:#AEF0E2;"><span style="display:inline-flex; align-items:center; gap:2px;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; padding:0 5px; box-sizing:border-box; border-radius:5px; background:linear-gradient(180deg,rgba(62,226,201,.18),rgba(62,226,201,.04)); border:1px solid rgba(62,226,201,.45); box-shadow:inset 0 1px 0 rgba(255,255,255,.14); font:600 11px/1 var(--font-mono); color:#AEF0E2;">⇧</span><span style="display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; padding:0 5px; box-sizing:border-box; border-radius:5px; background:linear-gradient(180deg,rgba(62,226,201,.18),rgba(62,226,201,.04)); border:1px solid rgba(62,226,201,.45); box-shadow:inset 0 1px 0 rgba(255,255,255,.14); font:600 11px/1 var(--font-mono); color:#AEF0E2;">↩</span></span>New line</span>
+        </div>
+        <p style="margin:11px 0 0; font:400 11.5px/1.6 var(--font-sans); color:rgba(190,217,255,.5);">The panel is a modal <span style="font-family:var(--font-mono); font-size:11px; color:#BFD9FF;">.sheet</span>: ⎋ is wired to the panel's existing “Close” button via <span style="font-family:var(--font-mono); font-size:11px; color:#BFD9FF;">.cancelAction</span> (pending), and doesn't join ChatView's Esc context chain; ↩ send / ⇧↩ newline are already implemented in the panel's input field.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ SECTION D — 完整速查卡 ============ -->
+  <div style="position:relative; z-index:1; max-width:1560px; margin:52px auto 8px; display:flex; align-items:center; gap:10px;">
+    <span style="font:700 11px/1 var(--font-mono); letter-spacing:.2em; text-transform:uppercase; color:#5AA9FF;">◇ Full hotkey cheat sheet</span>
+    <span style="flex:1; height:1px; background:linear-gradient(90deg, rgba(90,169,255,.4), transparent);"></span>
+  </div>
+
+  <div style="position:relative; z-index:1; max-width:940px; margin:0 auto 40px;">
+    <div style="position:relative; border-radius:20px; overflow:hidden; padding:26px 28px; background:linear-gradient(160deg, rgba(16,27,45,.9), rgba(7,12,22,.86)); border:1px solid rgba(90,169,255,.4); box-shadow:0 30px 80px -22px rgba(0,0,0,.8), 0 0 60px -14px rgba(67,131,228,.5), inset 0 0 80px -40px rgba(90,169,255,.4);">
+      <div style="position:absolute; inset:0; pointer-events:none; z-index:1; background-image:repeating-linear-gradient(0deg, rgba(120,180,255,.05) 0 1px, transparent 1px 3px); animation:vc-scandrift 5s linear infinite;"></div>
+      <div style="position:absolute; left:0; right:0; top:0; height:120px; pointer-events:none; z-index:1; background:linear-gradient(180deg, transparent, rgba(90,169,255,.1), transparent); animation:vc-scan 7s ease-in-out infinite;"></div>
+      <div style="position:absolute; top:11px; left:11px; width:20px; height:20px; border-top:2px solid #5AA9FF; border-left:2px solid #5AA9FF; border-radius:4px 0 0 0; box-shadow:-1px -1px 8px -1px rgba(90,169,255,.7); z-index:3;"></div>
+      <div style="position:absolute; top:11px; right:11px; width:20px; height:20px; border-top:2px solid #5AA9FF; border-right:2px solid #5AA9FF; border-radius:0 4px 0 0; box-shadow:1px -1px 8px -1px rgba(90,169,255,.7); z-index:3;"></div>
+      <div style="position:absolute; bottom:11px; left:11px; width:20px; height:20px; border-bottom:2px solid #5AA9FF; border-left:2px solid #5AA9FF; border-radius:0 0 0 4px; box-shadow:-1px 1px 8px -1px rgba(90,169,255,.7); z-index:3;"></div>
+      <div style="position:absolute; bottom:11px; right:11px; width:20px; height:20px; border-bottom:2px solid #5AA9FF; border-right:2px solid #5AA9FF; border-radius:0 0 4px 0; box-shadow:1px 1px 8px -1px rgba(90,169,255,.7); z-index:3;"></div>
+
+      <div style="position:relative; z-index:4;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+          <span style="width:7px; height:7px; border-radius:50%; background:#3EE2C9; box-shadow:0 0 8px 1px rgba(62,226,201,.9);"></span>
+          <span style="font:700 10px/1 var(--font-mono); letter-spacing:.22em; text-transform:uppercase; color:#5AA9FF;">VISIONCLAUDE · KEYBOARD MAP</span>
+          <span style="flex:1;"></span>
+          <span style="font:600 11px/1 var(--font-mono); color:rgba(190,217,255,.5);">macOS</span>
+        </div>
+
+        <!-- Group A -->
+        <div style="margin-top:16px; display:flex; align-items:center; gap:10px;">
+          <span style="font:700 11px/1 var(--font-sans); color:#EAF2FF;">A · Menu bar (global, state doesn't depend on the cursor)</span>
+          <span style="flex:1; height:1px; background:rgba(90,169,255,.2);"></span>
+        </div>
+        <div style="margin-top:12px; display:flex; flex-direction:column; gap:2px;">
+          <sc-for list="{{rowsA}}" as="r" hint-placeholder-count="7">
+            <div style="display:flex; align-items:center; gap:14px; padding:9px 6px; border-bottom:1px solid rgba(90,169,255,.08);">
+              <span style="display:inline-flex; align-items:center; gap:3px; width:112px; flex-shrink:0;">
+                <span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.2),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.48); box-shadow:0 0 9px -3px rgba(90,169,255,.5), inset 0 1px 0 rgba(255,255,255,.16); font:600 12px/1 var(--font-mono); color:#CFE4FF; white-space:nowrap;">{{r.cap1}}</span>
+                <sc-if value="{{r.hasCap2}}" hint-placeholder-val="{{false}}"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.2),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.48); box-shadow:0 0 9px -3px rgba(90,169,255,.5), inset 0 1px 0 rgba(255,255,255,.16); font:600 12px/1 var(--font-mono); color:#CFE4FF; white-space:nowrap;">{{r.cap2}}</span></sc-if>
+                <sc-if value="{{r.hasCap3}}" hint-placeholder-val="{{false}}"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(90,169,255,.2),rgba(90,169,255,.05)); border:1px solid rgba(90,169,255,.48); box-shadow:0 0 9px -3px rgba(90,169,255,.5), inset 0 1px 0 rgba(255,255,255,.16); font:600 12px/1 var(--font-mono); color:#CFE4FF; white-space:nowrap;">{{r.cap3}}</span></sc-if>
+              </span>
+              <span style="flex:1; min-width:0; font:500 13.5px/1.4 var(--font-sans); color:#EAF2FF;">{{r.action}}</span>
+              <span style="width:200px; flex-shrink:0; font:400 12px/1.4 var(--font-mono); color:rgba(140,195,255,.55); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{r.source}}</span>
+              <span style="width:96px; flex-shrink:0; text-align:right;"><span style="font:600 10px/1 var(--font-mono); color:{{r.platColor}}; background:{{r.platBg}}; border:1px solid {{r.platBorder}}; padding:4px 8px; border-radius:100px;">{{r.platLabel}}</span></span>
+            </div>
+          </sc-for>
+        </div>
+
+        <!-- Group B -->
+        <div style="margin-top:22px; display:flex; align-items:center; gap:10px;">
+          <span style="font:700 11px/1 var(--font-sans); color:#EAF2FF;">B · View (tightly coupled to current keyboard focus / UI state)</span>
+          <span style="flex:1; height:1px; background:rgba(62,226,201,.2);"></span>
+        </div>
+        <div style="margin-top:12px; display:flex; flex-direction:column; gap:2px;">
+          <sc-for list="{{rowsB}}" as="r" hint-placeholder-count="6">
+            <div style="display:flex; align-items:center; gap:14px; padding:9px 6px; border-bottom:1px solid rgba(62,226,201,.08);">
+              <span style="display:inline-flex; align-items:center; gap:3px; width:112px; flex-shrink:0;">
+                <span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(62,226,201,.16),rgba(62,226,201,.04)); border:1px solid rgba(62,226,201,.45); box-shadow:0 0 9px -3px rgba(62,226,201,.45), inset 0 1px 0 rgba(255,255,255,.14); font:600 12px/1 var(--font-mono); color:#AEF0E2; white-space:nowrap;">{{r.cap1}}</span>
+                <sc-if value="{{r.hasCap2}}" hint-placeholder-val="{{false}}"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; box-sizing:border-box; border-radius:6px; background:linear-gradient(180deg,rgba(62,226,201,.16),rgba(62,226,201,.04)); border:1px solid rgba(62,226,201,.45); box-shadow:0 0 9px -3px rgba(62,226,201,.45), inset 0 1px 0 rgba(255,255,255,.14); font:600 12px/1 var(--font-mono); color:#AEF0E2; white-space:nowrap;">{{r.cap2}}</span></sc-if>
+              </span>
+              <span style="flex:1; min-width:0; font:500 13.5px/1.4 var(--font-sans); color:#EAF2FF;">{{r.action}}</span>
+              <span style="width:200px; flex-shrink:0; font:400 12px/1.4 var(--font-mono); color:rgba(140,195,255,.55); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{r.source}}</span>
+              <span style="width:96px; flex-shrink:0; text-align:right;"><span style="font:600 10px/1 var(--font-mono); color:#3EE2C9; background:rgba(62,226,201,.1); border:1px solid rgba(62,226,201,.35); padding:4px 8px; border-radius:100px;">visionOS ✓</span></span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 架構 / 排除 ============ -->
+  <div style="position:relative; z-index:1; max-width:940px; margin:0 auto; display:flex; gap:20px; flex-wrap:wrap;">
+    <div style="flex:1; min-width:300px; border-radius:14px; padding:18px 20px; background:linear-gradient(160deg, rgba(16,27,45,.7), rgba(7,12,22,.66)); border:1px solid rgba(90,169,255,.24);">
+      <div style="font:700 9.5px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:#5AA9FF; margin-bottom:12px;">Architecture</div>
+      <div style="display:flex; flex-direction:column; gap:9px; font:400 13px/1.55 var(--font-sans); color:rgba(220,232,250,.68);">
+        <div>Adds two <span style="font-family:var(--font-mono); font-size:12px; color:#BFD9FF;">FocusedValueKey</span>s: <span style="font-family:var(--font-mono); font-size:12px; color:#BFD9FF;">SessionListActions</span> (⌘N/⌘,/⌘1–9) and <span style="font-family:var(--font-mono); font-size:12px; color:#BFD9FF;">ChatActions</span> (voice/attach/two menu Bindings).</div>
+        <div><span style="font-family:var(--font-mono); font-size:12px; color:#BFD9FF;">.commands</span> reads the action via <span style="font-family:var(--font-mono); font-size:12px; color:#BFD9FF;">@FocusedValue</span>; if it can't be read, it's disabled.</div>
+        <div>ModelMenu/PermissionModeMenu's <span style="font-family:var(--font-mono); font-size:12px; color:#BFD9FF;">expanded</span> state is lifted from @State to a <span style="font-family:var(--font-mono); font-size:12px; color:#BFD9FF;">Binding&lt;Bool&gt;</span>; mouse-click behavior is unchanged.</div>
+      </div>
+    </div>
+    <div style="flex:1; min-width:300px; border-radius:14px; padding:18px 20px; background:linear-gradient(160deg, rgba(16,27,45,.7), rgba(7,12,22,.66)); border:1px solid rgba(140,178,201,.24);">
+      <div style="font:700 9.5px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:#AFC0D4; margin-bottom:12px;">Deliberately excluded (to avoid scope creep)</div>
+      <div style="display:flex; flex-direction:column; gap:9px; font:400 13px/1.55 var(--font-sans); color:rgba(220,232,250,.62);">
+        <div style="display:flex; gap:8px;"><span style="color:#FF9D97; flex-shrink:0;">✕</span>A fuzzy-search hotkey for the session list — the main screen has no focusable search field.</div>
+        <div style="display:flex; gap:8px;"><span style="color:#FF9D97; flex-shrink:0;">✕</span>A hotkey to delete the current session — ChatView has no delete entry point, which goes beyond “purely wiring up existing actions”.</div>
+        <div style="display:flex; gap:8px;"><span style="color:#FF9D97; flex-shrink:0;">✕</span><span style="font-family:var(--font-mono); font-size:12px; color:#BFD9FF;">/mcp</span> and <span style="font-family:var(--font-mono); font-size:12px; color:#BFD9FF;">/status</span> panel hotkeys — already fast text commands, so the payoff is low.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:1700},&quot;defaultMenu&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;session&quot;,&quot;chat&quot;],&quot;default&quot;:&quot;session&quot;,&quot;tsType&quot;:&quot;'session'|'chat'&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+class Component extends DCLogic {
+  state = {
+    activeMenu: 'session',
+    escPalette: true,
+    escCard: false,
+    escStream: true,
+  };
+
+  constructor(props) {
+    super(props);
+    this.state.activeMenu = props.defaultMenu === 'chat' ? 'chat' : 'session';
+  }
+
+  ROWS_A = [
+    { caps: ['⌘', 'N'], action: 'New Session (opens NewSessionSheet)', source: 'SessionListView' },
+    { caps: ['⌘', '1–9'], action: 'Switch to / wake session N', source: 'openWindow(id: chat)' },
+    { caps: ['⌘', ','], action: 'Settings…', source: 'SettingsView' },
+    { caps: ['⌘', '⇧', 'V'], action: 'Toggle Voice Input', source: 'ChatView · toggleRecording()' },
+    { caps: ['⌘', '⇧', 'A'], action: 'Attach File', source: 'ChatView · showFileImporter' },
+    { caps: ['⌘', '⇧', 'F'], action: 'Relay to Another Session (opens panel)', source: 'ChatView · showRelayPicker' },
+    { caps: ['⌘', '⇧', 'M'], action: 'Toggle Model Menu', source: 'ModelMenu' },
+    { caps: ['⌘', '⇧', 'P'], action: 'Toggle Permission Mode Menu', source: 'PermissionModeMenu' },
+  ];
+
+  ROWS_B = [
+    { caps: ['↩'], action: 'Send message', source: 'Input field · onKeyPress' },
+    { caps: ['⇧', '↩'], action: 'New line', source: 'Input field · onKeyPress' },
+    { caps: ['⎋'], action: 'Close palette / interrupt streaming (contextual)', source: 'ChatView · onKeyPress' },
+    { caps: ['↩'], action: 'Approve the permission card (allow)', source: 'Permission card (focus on the card)' },
+    { caps: ['⎋'], action: 'Deny the permission card (deny)', source: 'Permission card' },
+    { caps: ['1–9'], action: 'Select an option and send immediately', source: 'ask_user_menu · single question, single choice' },
+    { caps: ['⎋'], action: 'Close the relay panel', source: 'RelayTargetPickerSheet · cancelAction' },
+    { caps: ['↩'], action: 'Send the relay message', source: 'RelayTargetPickerSheet · input field' },
+  ];
+
+  capRow(caps) {
+    return {
+      cap1: caps[0],
+      cap2: caps[1] || '',
+      cap3: caps[2] || '',
+      hasCap2: caps.length > 1,
+      hasCap3: caps.length > 2,
+    };
+  }
+
+  chipSkin(on, hue) {
+    // hue: 'blue' | 'amber' | 'red'
+    const palettes = {
+      blue: { dot: '#5AA9FF', glow: '0 0 7px 1px rgba(90,169,255,.9)', bg: 'rgba(90,169,255,.14)', border: 'rgba(90,169,255,.5)', text: '#EAF2FF', tag: '#8CC3FF' },
+      amber: { dot: '#FF9D4D', glow: '0 0 7px 1px rgba(255,157,77,.9)', bg: 'rgba(255,157,77,.14)', border: 'rgba(255,157,77,.5)', text: '#FFE7CE', tag: '#FFB877' },
+      red: { dot: '#FF7A72', glow: '0 0 7px 1px rgba(255,122,114,.9)', bg: 'rgba(255,122,114,.14)', border: 'rgba(255,122,114,.5)', text: '#FFE1DE', tag: '#FF9D97' },
+    };
+    const p = palettes[hue];
+    if (on) return { ...p, state: 'ON' };
+    return {
+      dot: 'rgba(140,178,201,.5)',
+      glow: 'none',
+      bg: 'rgba(140,178,201,.05)',
+      border: 'rgba(140,178,201,.22)',
+      text: 'rgba(220,232,250,.55)',
+      tag: 'rgba(190,217,255,.4)',
+      state: 'OFF',
+    };
+  }
+
+  resolveEsc() {
+    const s = this.state;
+    if (s.escPalette) return { label: 'Close Slash palette', code: 'showSlashPalette = false', color: '#8CC3FF', bg: 'rgba(90,169,255,.12)', border: 'rgba(90,169,255,.45)' };
+    if (s.escCard) return { label: 'Deny Permission card', code: 'decide(.deny)', color: '#FFB877', bg: 'rgba(255,157,77,.12)', border: 'rgba(255,157,77,.45)' };
+    if (s.escStream) return { label: 'Interrupt response', code: 'vm.interrupt()', color: '#FF9D97', bg: 'rgba(255,122,114,.12)', border: 'rgba(255,122,114,.45)' };
+    return { label: '(no action)', code: '—', color: '#AFC0D4', bg: 'rgba(140,178,201,.08)', border: 'rgba(140,178,201,.28)' };
+  }
+
+  renderVals() {
+    const active = this.state.activeMenu;
+    const sessionOn = active === 'session';
+    const chatOn = active === 'chat';
+
+    const platMac = { platLabel: 'macOS only', platBg: 'rgba(140,178,201,.1)', platBorder: 'rgba(140,178,201,.32)', platColor: '#AFC0D4' };
+    const rowsA = this.ROWS_A.map((r) => ({ ...this.capRow(r.caps), action: r.action, source: r.source, ...platMac }));
+    const rowsB = this.ROWS_B.map((r) => ({ ...this.capRow(r.caps), action: r.action, source: r.source }));
+
+    return {
+      // menu bar
+      openSession: () => this.setState({ activeMenu: 'session' }),
+      openChat: () => this.setState({ activeMenu: 'chat' }),
+      sessionActive: sessionOn,
+      chatActive: chatOn,
+      sessionBg: sessionOn ? '#3A6FE0' : 'transparent',
+      sessionColor: sessionOn ? '#ffffff' : 'rgba(233,238,245,.72)',
+      chatBg: chatOn ? '#3A6FE0' : 'transparent',
+      chatColor: chatOn ? '#ffffff' : 'rgba(233,238,245,.72)',
+
+      // esc resolver
+      cPalette: this.chipSkin(this.state.escPalette, 'blue'),
+      cCard: this.chipSkin(this.state.escCard, 'amber'),
+      cStream: this.chipSkin(this.state.escStream, 'red'),
+      toggleEscPalette: () => this.setState((s) => ({ escPalette: !s.escPalette })),
+      toggleEscCard: () => this.setState((s) => ({ escCard: !s.escCard })),
+      toggleEscStream: () => this.setState((s) => ({ escStream: !s.escStream })),
+      esc: this.resolveEsc(),
+
+      // cheat sheet
+      rowsA,
+      rowsB,
+    };
+  }
+}
+</script>
+</body>
+</html>

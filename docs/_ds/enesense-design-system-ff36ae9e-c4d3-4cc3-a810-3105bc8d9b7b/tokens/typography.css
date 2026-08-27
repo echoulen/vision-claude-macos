@@ -1,0 +1,120 @@
+/* ============================================================
+   EneSense — Typography Tokens
+   Source: cems-ui/src/core/theme/commonTheme.ts (typographyTheme)
+   A Material-3-inspired scale: Display ▸ Headline ▸ Title ▸ Label ▸ Body.
+   Values below are the DESKTOP (≥ xl) sizes — the canonical specimen.
+   The product steps these down at lg/md/sm breakpoints.
+   ============================================================ */
+
+:root {
+  /* ---- Font families ---- */
+  /* Inter for Latin; Noto Sans TC / JP carry CJK glyphs (Taiwan + Japan markets). */
+  --font-sans: "Inter", "Noto Sans TC", "Noto Sans JP", sans-serif;
+  --font-family: var(--font-sans);     /* product reads this via --fontFamily */
+  --font-numeric: "Inter", sans-serif; /* tabular numerals in charts/tables    */
+
+  /* ---- Weights ---- */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ---- Display: page hero titles ---- */
+  --type-display-large-size: 3.5625rem;   /* 57px */
+  --type-display-large-line: 4rem;         /* 64px */
+  --type-display-large-weight: 700;
+  --type-display-large-tracking: -0.25px;
+
+  --type-display-medium-size: 2.8125rem;   /* 45px */
+  --type-display-medium-line: 3.25rem;     /* 52px */
+  --type-display-medium-weight: 700;
+  --type-display-medium-tracking: -0.5px;
+
+  --type-display-small-size: 2.25rem;      /* 36px */
+  --type-display-small-line: 2.75rem;      /* 44px */
+  --type-display-small-weight: 700;
+  --type-display-small-tracking: -0.2px;
+
+  /* ---- Headline: section + card-group titles ---- */
+  --type-headline-large-size: 2rem;        /* 32px */
+  --type-headline-large-line: 2.5rem;      /* 40px */
+  --type-headline-large-weight: 700;
+  --type-headline-large-tracking: -0.2px;
+
+  --type-headline-medium-size: 1.75rem;    /* 28px */
+  --type-headline-medium-line: 2.25rem;    /* 36px */
+  --type-headline-medium-weight: 600;
+  --type-headline-medium-tracking: -0.5px;
+
+  --type-headline-small-size: 1.5rem;      /* 24px */
+  --type-headline-small-line: 2rem;        /* 32px */
+  --type-headline-small-weight: 400;       /* light at md+ — used for top-bar page title */
+
+  /* ---- Title: in-component headings (card titles, table headers) ---- */
+  --type-title-xlarge-size: 1.25rem;       /* 20px */
+  --type-title-xlarge-line: 1.625rem;      /* 26px */
+  --type-title-xlarge-weight: 600;
+  --type-title-xlarge-tracking: -0.4px;
+
+  --type-title-large-size: 1.125rem;       /* 18px */
+  --type-title-large-line: 1.625rem;       /* 26px */
+  --type-title-large-weight: 700;
+  --type-title-large-tracking: -0.2px;
+
+  --type-title-medium-size: 1rem;          /* 16px — the default card title */
+  --type-title-medium-line: 1.5rem;        /* 24px */
+  --type-title-medium-weight: 500;
+
+  --type-title-small-size: 0.875rem;       /* 14px */
+  --type-title-small-line: 1.25rem;        /* 20px */
+  --type-title-small-weight: 700;
+
+  /* ---- Label: buttons, chips, badges, tags ---- */
+  --type-label-large-size: 0.875rem;       /* 14px — button text */
+  --type-label-large-line: 1.25rem;        /* 20px */
+  --type-label-large-weight: 500;
+
+  --type-label-medium-size: 0.75rem;       /* 12px */
+  --type-label-medium-line: 1rem;          /* 16px */
+  --type-label-medium-weight: 500;
+
+  --type-label-small-size: 0.6875rem;      /* 11px */
+  --type-label-small-line: 1rem;           /* 16px */
+  --type-label-small-weight: 500;
+
+  /* ---- Body: paragraphs, descriptions, values ---- */
+  --type-body-xlarge-size: 1.125rem;       /* 18px */
+  --type-body-xlarge-line: 1.625rem;       /* 26px */
+  --type-body-xlarge-weight: 400;
+
+  --type-body-large-size: 1rem;            /* 16px */
+  --type-body-large-line: 1.5rem;          /* 24px */
+  --type-body-large-weight: 400;
+
+  --type-body-medium-size: 0.875rem;       /* 14px — default body */
+  --type-body-medium-line: 1.25rem;        /* 20px */
+  --type-body-medium-weight: 400;
+
+  --type-body-small-size: 0.75rem;         /* 12px */
+  --type-body-small-line: 1rem;            /* 16px */
+  --type-body-small-weight: 400;
+}
+
+/* ---- Optional helper classes (specimen + quick styling) ---- */
+.type-display-large  { font: var(--type-display-large-weight) var(--type-display-large-size)/var(--type-display-large-line) var(--font-sans); letter-spacing: var(--type-display-large-tracking); }
+.type-display-medium { font: var(--type-display-medium-weight) var(--type-display-medium-size)/var(--type-display-medium-line) var(--font-sans); letter-spacing: var(--type-display-medium-tracking); }
+.type-display-small  { font: var(--type-display-small-weight) var(--type-display-small-size)/var(--type-display-small-line) var(--font-sans); letter-spacing: var(--type-display-small-tracking); }
+.type-headline-large { font: var(--type-headline-large-weight) var(--type-headline-large-size)/var(--type-headline-large-line) var(--font-sans); letter-spacing: var(--type-headline-large-tracking); }
+.type-headline-medium{ font: var(--type-headline-medium-weight) var(--type-headline-medium-size)/var(--type-headline-medium-line) var(--font-sans); letter-spacing: var(--type-headline-medium-tracking); }
+.type-headline-small { font: var(--type-headline-small-weight) var(--type-headline-small-size)/var(--type-headline-small-line) var(--font-sans); }
+.type-title-xlarge   { font: var(--type-title-xlarge-weight) var(--type-title-xlarge-size)/var(--type-title-xlarge-line) var(--font-sans); letter-spacing: var(--type-title-xlarge-tracking); }
+.type-title-large    { font: var(--type-title-large-weight) var(--type-title-large-size)/var(--type-title-large-line) var(--font-sans); letter-spacing: var(--type-title-large-tracking); }
+.type-title-medium   { font: var(--type-title-medium-weight) var(--type-title-medium-size)/var(--type-title-medium-line) var(--font-sans); }
+.type-title-small    { font: var(--type-title-small-weight) var(--type-title-small-size)/var(--type-title-small-line) var(--font-sans); }
+.type-label-large    { font: var(--type-label-large-weight) var(--type-label-large-size)/var(--type-label-large-line) var(--font-sans); }
+.type-label-medium   { font: var(--type-label-medium-weight) var(--type-label-medium-size)/var(--type-label-medium-line) var(--font-sans); }
+.type-label-small    { font: var(--type-label-small-weight) var(--type-label-small-size)/var(--type-label-small-line) var(--font-sans); }
+.type-body-xlarge    { font: var(--type-body-xlarge-weight) var(--type-body-xlarge-size)/var(--type-body-xlarge-line) var(--font-sans); }
+.type-body-large     { font: var(--type-body-large-weight) var(--type-body-large-size)/var(--type-body-large-line) var(--font-sans); }
+.type-body-medium    { font: var(--type-body-medium-weight) var(--type-body-medium-size)/var(--type-body-medium-line) var(--font-sans); }
+.type-body-small     { font: var(--type-body-small-weight) var(--type-body-small-size)/var(--type-body-small-line) var(--font-sans); }

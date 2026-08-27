@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="07 · Pair App Confirm (Sci-Fi HUD)" description="vision-claude App 端接住配對深連結後的確認卡片 — 科幻 HUD 版" -->
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/tokens/radius-elevation.css">
+  <link rel="stylesheet" href="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/styles.css">
+  <script src="_ds/enesense-design-system-ff36ae9e-c4d3-4cc3-a810-3105bc8d9b7b/_ds_bundle.js"></script>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+    :root{ --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; }
+    body{ margin:0; font-family:var(--font-sans); -webkit-font-smoothing:antialiased; }
+    a{ color:#5AA9FF; } a:hover{ color:#8CC3FF; }
+    @keyframes vc-grid{ from{ background-position:0 0 } to{ background-position:0 60px } }
+    @keyframes vc-scan{ 0%{ transform:translateY(-90px); opacity:0 } 10%{ opacity:.5 } 90%{ opacity:.5 } 100%{ transform:translateY(560px); opacity:0 } }
+    @keyframes vc-boot{ 0%{ opacity:0; transform:translateY(12px) scale(.98) } 60%{ opacity:1 } 100%{ opacity:1; transform:translateY(0) scale(1) } }
+    @keyframes vc-orb{ 0%,100%{ box-shadow:0 0 0 0 rgba(90,169,255,.5), 0 0 16px 3px rgba(90,169,255,.7) } 50%{ box-shadow:0 0 0 12px rgba(90,169,255,0), 0 0 22px 5px rgba(90,169,255,.9) } }
+  </style>
+</helmet>
+
+<div style="min-height:100vh; padding:56px 40px 130px; box-sizing:border-box; font-family:var(--font-sans); color:#DCE8FA;
+            background:radial-gradient(ellipse 900px 500px at 50% -6%, rgba(67,131,228,.16), transparent 60%), radial-gradient(ellipse 700px 500px at 80% 110%, rgba(25,203,182,.1), transparent 60%), linear-gradient(180deg,#05070C,#03040a);">
+
+  <div style="max-width:1560px; margin:0 auto 8px;">
+    <div style="display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;">
+      <span style="font:800 28px/1.2 var(--font-sans); color:#EAF2FF; letter-spacing:-.01em; white-space:nowrap; text-shadow:0 0 18px rgba(90,169,255,.5);">Pairing — app-side confirm</span>
+      <span style="font:600 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:#5AA9FF; background:rgba(90,169,255,.1); border:1px solid rgba(90,169,255,.35); padding:5px 11px; border-radius:100px; white-space:nowrap;">SCI-FI HUD · DEEP LINK</span>
+    </div>
+    <p style="margin:10px 0 0; font:400 15px/1.6 var(--font-sans); color:rgba(220,232,250,.6); max-width:780px;">After the user taps "Open in App" on screen 06, the app shows this confirmation card before writing the setting — intentionally prominent, never a flash-and-gone toast, to avoid a mis-tap on a malicious link. Tapping "Connect" finishes the flow and returns to the session list.</p>
+  </div>
+
+  <div style="max-width:1560px; margin:30px auto 0; display:flex; justify-content:center;">
+    <div style="position:relative; width:760px; max-width:94vw; padding:64px 50px; border-radius:24px; overflow:hidden; display:flex; justify-content:center;
+                background:radial-gradient(ellipse 560px 380px at 50% -12%, rgba(67,131,228,.28), transparent 55%), radial-gradient(ellipse 500px 400px at 50% 118%, rgba(25,203,182,.14), transparent 60%), linear-gradient(180deg,#070b14,#04060c);">
+      <div style="position:absolute; left:-30%; right:-30%; bottom:0; height:44%; pointer-events:none; background-image:linear-gradient(rgba(90,169,255,.4) 1px, transparent 1px), linear-gradient(90deg, rgba(90,169,255,.22) 1px, transparent 1px); background-size:58px 58px, 58px 58px; transform:perspective(320px) rotateX(72deg); transform-origin:bottom center; -webkit-mask-image:linear-gradient(0deg,#000,transparent 78%); mask-image:linear-gradient(0deg,#000,transparent 78%); animation:vc-grid 4s linear infinite;"></div>
+      <div style="position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg, transparent, rgba(90,169,255,.8), transparent);"></div>
+
+      <div style="position:relative; width:440px; max-width:100%; border-radius:18px; overflow:hidden; padding:30px 28px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px;
+                  background:linear-gradient(160deg, rgba(16,27,45,.9), rgba(7,12,22,.86)); border:1px solid rgba(90,169,255,.42);
+                  box-shadow:0 30px 80px -18px rgba(0,0,0,.85), 0 0 60px -10px rgba(67,131,228,.6), inset 0 0 70px -30px rgba(90,169,255,.5); color:#DCE8FA;
+                  animation:vc-boot .55s cubic-bezier(.2,.7,.2,1) both;">
+        <div style="position:absolute; inset:0; pointer-events:none; z-index:2; background-image:repeating-linear-gradient(0deg, rgba(120,180,255,.05) 0 1px, transparent 1px 3px);"></div>
+        <div style="position:absolute; left:0; right:0; top:0; height:80px; pointer-events:none; z-index:3; background:linear-gradient(180deg, transparent, rgba(90,169,255,.18), transparent); animation:vc-scan 5s ease-in-out infinite;"></div>
+        <div style="position:absolute; top:9px; left:9px; width:18px; height:18px; border-top:2px solid #5AA9FF; border-left:2px solid #5AA9FF; border-radius:4px 0 0 0; box-shadow:-1px -1px 8px -1px rgba(90,169,255,.7); z-index:4;"></div>
+        <div style="position:absolute; top:9px; right:9px; width:18px; height:18px; border-top:2px solid #5AA9FF; border-right:2px solid #5AA9FF; border-radius:0 4px 0 0; box-shadow:1px -1px 8px -1px rgba(90,169,255,.7); z-index:4;"></div>
+        <div style="position:absolute; bottom:9px; left:9px; width:18px; height:18px; border-bottom:2px solid #5AA9FF; border-left:2px solid #5AA9FF; border-radius:0 0 0 4px; box-shadow:-1px 1px 8px -1px rgba(90,169,255,.7); z-index:4;"></div>
+        <div style="position:absolute; bottom:9px; right:9px; width:18px; height:18px; border-bottom:2px solid #5AA9FF; border-right:2px solid #5AA9FF; border-radius:0 0 4px 0; box-shadow:1px 1px 8px -1px rgba(90,169,255,.7); z-index:4;"></div>
+
+        <span style="position:relative; z-index:5; width:58px; height:58px; border-radius:50%; background:rgba(90,169,255,.16); border:1px solid rgba(90,169,255,.45); display:flex; align-items:center; justify-content:center; margin-bottom:8px; animation:vc-orb 2.4s ease-in-out infinite;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8CC3FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"></path></svg>
+        </span>
+
+        <div style="position:relative; z-index:5; font:700 10px/1 var(--font-mono); letter-spacing:.2em; text-transform:uppercase; color:#5AA9FF; margin-bottom:2px;">◇ Pairing request · INCOMING</div>
+        <span style="position:relative; z-index:5; font:700 19px/1.45 var(--font-sans); color:#EAF2FF;">Connect to<br/><span style="font-family:var(--font-mono); font-size:17px; color:#8CC3FF; text-shadow:0 0 12px rgba(90,169,255,.5);">172.18.0.105:8790</span><br/>?</span>
+        <span style="position:relative; z-index:5; font:400 13px/1.6 var(--font-sans); color:rgba(190,217,255,.6); margin:6px 0 4px;">This will overwrite your current Server settings.</span>
+
+        <div style="position:relative; z-index:5; width:100%; background:rgba(6,12,22,.6); border:1px solid rgba(90,169,255,.24); border-radius:12px; padding:12px 16px; display:flex; flex-direction:column; gap:9px; text-align:left; margin:10px 0 6px;">
+          <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font:500 12px/1 var(--font-mono); letter-spacing:.06em; color:rgba(140,195,255,.55);">SERVER</span><span style="font:600 13px/1 var(--font-mono); color:#EAF2FF;">172.18.0.105:8790</span></div>
+          <div style="height:1px; background:rgba(90,169,255,.14);"></div>
+          <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font:500 12px/1 var(--font-mono); letter-spacing:.06em; color:rgba(140,195,255,.55);">TOKEN</span><span style="font:600 13px/1 var(--font-mono); color:#EAF2FF; letter-spacing:2px;">••••••••</span></div>
+        </div>
+
+        <div style="position:relative; z-index:5; display:flex; gap:12px; width:100%; margin-top:10px;">
+          <div style="flex:1; height:56px; border-radius:11px; background:rgba(255,122,114,.1); border:1px solid rgba(255,122,114,.42); display:flex; align-items:center; justify-content:center; font:700 15.5px/1 var(--font-sans); color:#FF9D97;">Cancel</div>
+          <div style="flex:1; height:56px; border-radius:11px; background:linear-gradient(180deg,#5AA9FF,#2F6FD6); display:flex; align-items:center; justify-content:center; font:700 15.5px/1 var(--font-sans); color:#fff; box-shadow:0 0 26px -4px rgba(90,169,255,.85), inset 0 1px 0 rgba(255,255,255,.4);">Connect</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</x-dc>
+</body>
+</html>
