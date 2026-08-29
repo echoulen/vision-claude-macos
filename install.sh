@@ -15,11 +15,19 @@ DIST_REPO="${VC_DIST_REPO:-echoulen/vision-claude-macos}"
 # label 可覆蓋純粹是為了能測這支腳本本身：搭配另一個 HOME 與 port，就能把安裝流程完整跑到
 # 底（含 launchctl 註冊與健康檢查）而不動到正式服務。這支腳本的失敗方式都是「執行到某一行
 # 才炸」，不整段跑過就等於沒驗證。
-LABEL="${VC_LABEL:-io.nextdrive.vision-claude-server}"
+DEFAULT_LABEL="io.echoulen.vision-claude-server"
+LABEL="${VC_LABEL:-$DEFAULT_LABEL}"
+# 改名(io.nextdrive → io.echoulen)前註冊的服務。它指向同一個安裝目錄、綁同一個 port,
+# 留著會在下次登入被 launchd 拉起來跟新服務搶 8790——而那時 port 檢查只會說「被別的服務
+# 佔用」然後中止安裝,使用者完全看不出真正的原因。用 VC_LABEL 覆寫時一律不碰它:測試用的
+# 假 label 不該連帶拆掉正式服務。
+LEGACY_LABEL="io.nextdrive.vision-claude-server"
+[ "$LABEL" = "$DEFAULT_LABEL" ] || LEGACY_LABEL=""
 DATA_DIR="$HOME/.vision-claude"
 INSTALL_DIR="$DATA_DIR/server"
 CONFIG="$DATA_DIR/config.json"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
+LEGACY_PLIST="${LEGACY_LABEL:+$HOME/Library/LaunchAgents/$LEGACY_LABEL.plist}"
 DOMAIN="gui/$(id -u)"
 OUT_LOG="$HOME/Library/Logs/vision-claude-server.out.log"
 ERR_LOG="$HOME/Library/Logs/vision-claude-server.err.log"
@@ -51,6 +59,11 @@ port_in_use() {
 # 佔用」而中止安裝——正在跑 session 的機器最容易踩到。
 stop_service() {
   launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
+  # 舊 label 的服務與 plist 一起收掉,否則它會在下次登入自己回來。
+  if [ -n "$LEGACY_LABEL" ]; then
+    launchctl bootout "$DOMAIN/$LEGACY_LABEL" 2>/dev/null || true
+    rm -f "$LEGACY_PLIST"
+  fi
   local port="${1:-}"
   [ -n "$port" ] || return 0
   for _ in $(seq 1 30); do
