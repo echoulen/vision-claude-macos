@@ -115,7 +115,12 @@ install_app() {
 
   # App 是純 client,所有狀態(session、對話)都在 server 端,關掉不會遺失任何東西,
   # 頂多是輸入框裡尚未送出的草稿。
+  #
+  # 有沒有在跑要記下來:換完檔案要把它開回來(使用者按的是「更新」,不是「關掉 App」),
+  # 但只限原本就開著的情況——沒開著的時候硬開一個視窗出來是多管閒事。
+  local app_was_running=0
   if pgrep -f "$APP_PATH/Contents/MacOS/VisionClaude" >/dev/null 2>&1; then
+    app_was_running=1
     info "Quitting running App"
     osascript -e 'quit app "VisionClaude"' 2>/dev/null || true
     sleep 1
@@ -168,6 +173,12 @@ install_app() {
   rm -rf "$backup" 2>/dev/null \
     || warn "The new App is installed, but the previous version is left at ${backup} (owned by root, only root can delete it). To clean it up, run:
      sudo rm -rf '${backup}'"
+
+  # 開回來只在原本就開著時做,理由見上面 app_was_running。開不起來不該讓整個安裝算失敗——
+  # 檔案已經就位了,使用者自己點一下也是一樣的。
+  if [ "$app_was_running" = "1" ]; then
+    open -a "$APP_PATH" 2>/dev/null || warn "The App is installed but couldn't be reopened; open it from /Applications."
+  fi
 
   ok "Installed $APP_PATH"
 }
