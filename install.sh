@@ -243,6 +243,12 @@ ok "Installed to ${INSTALL_DIR} (version ${VERSION})"
 # 這裡只寫兩樣安裝當下才知道的事：claude 的絕對路徑，以及「新安裝要讓 Vision Pro 連得進來」
 # 的 bind。已經有設定檔時只更新 claudeBin，bind 與 port 維持使用者原本的選擇。
 #
+# `models` 是例外，升級時一律刪掉：model id 會隨 CLI 改版汰換（claude-fable-5 →
+# claude-fable-5-1），留在設定檔裡的舊清單會把選單凍在寫入的那一刻，選到已消失的 id 只會失敗。
+# 清單的唯一真相是 server/src/config.ts 的 DEFAULT_MODELS，設定檔沒這個欄位就會 fallback
+# 回去（見 config.ts 的 `raw.models ?? DEFAULT_MODELS`）；這裡刪掉而不是寫入新清單，是為了
+# 不讓 install.sh 變成第二份要同步維護的清單。
+#
 # 用剛解壓的 node 改 JSON，不假設這台機器有 node/python/jq。
 if [ -f "$CONFIG" ]; then
   info "Updating claudeBin in the existing config"
@@ -251,6 +257,7 @@ if [ -f "$CONFIG" ]; then
     const [file, claudeBin] = process.argv.slice(1);
     const cfg = JSON.parse(fs.readFileSync(file, "utf8"));
     cfg.claudeBin = claudeBin;
+    delete cfg.models;
     fs.writeFileSync(file, JSON.stringify(cfg, null, 2) + "\n");
   ' "$CONFIG" "$CLAUDE_BIN"
 else
