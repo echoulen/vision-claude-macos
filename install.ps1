@@ -1,6 +1,6 @@
 # vision-claude server installer / updater / uninstaller for Windows (x64).
 #
-#   PowerShell (a normal window is fine; it asks for administrator rights once via UAC):
+#   PowerShell (a normal, non-administrator window):
 #     irm https://raw.githubusercontent.com/echoulen/vision-claude-macos/main/install.ps1 | iex
 #   cmd:
 #     curl -fsSL https://raw.githubusercontent.com/echoulen/vision-claude-macos/main/install.ps1 -o "%TEMP%\vc-install.ps1" && powershell -NoProfile -ExecutionPolicy Bypass -File "%TEMP%\vc-install.ps1"
@@ -9,12 +9,14 @@
 #
 # Installs Git for Windows (winget) and the native Claude Code if they're missing (asks first) ->
 # downloads the release bundle -> installs to %USERPROFILE%\.vision-claude\server -> writes config ->
-# registers a logon task that runs a hidden supervisor -> opens the firewall (Private profile only) ->
+# opens the firewall (Private profile only) -> starts a hidden supervisor now and at every logon ->
 # waits for /health -> prints the pairing URL. Rerunning the same line updates in place.
 #
-# Administrator is required for the logon task and the firewall rule; the task itself runs as the
-# current user with normal (Limited) rights. When started without it, the script relaunches itself
-# in a new elevated window (one UAC prompt) and the rest of the install happens there.
+# Everything is installed for the account running this script, and runs only while that account is
+# signed in. Each Windows account that should serve the Mac runs the installer once. Only the
+# firewall rule needs administrator rights: it is created by a small separate elevated step (one
+# UAC prompt), so answering UAC with a different administrator account can't redirect the install
+# into that account's profile.
 #
 # Never call `exit` in here: under `irm | iex` it would close the user's PowerShell window.
 # Fatal errors `throw` instead.
@@ -23,21 +25,20 @@ param(
   # Local release archive instead of downloading the latest release (testing).
   [string]$Tarball = $env:VC_TARBALL,
   # Alternative dist repo (testing).
-  [string]$DistRepoOverride = $env:VC_DIST_REPO,
-  # Set by the self-elevation below: SID of the account that started the install before the UAC
-  # prompt. A SID never contains spaces, so comparing it (instead of the display name) is safe
-  # even when Start-Process joins -ArgumentList with spaces and no quoting.
-  [string]$InvokedBySid = '',
-  # Set by the self-elevation below: display name of that same account, for the error message only.
-  [string]$InvokedByName = ''
+  [string]$DistRepoOverride = $env:VC_DIST_REPO
 )
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
 $DistRepo      = if ($DistRepoOverride) { $DistRepoOverride } else { 'echoulen/vision-claude-macos' }
-$TaskName      = 'VisionClaudeServer'
-$FirewallRule  = 'VisionClaude Server'
+# Per account: several Windows accounts on one PC can each have their own install and rule.
+$FirewallRule  = "VisionClaude Server ($env:USERDOMAIN\$env:USERNAME)"
+# v0.7.0 used a logon task and one machine-wide rule name; both are migrated away on (re)install.
+$LegacyTask    = 'VisionClaudeServer'
+$LegacyRule    = 'VisionClaude Server'
+$RunKey        = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
+$RunName       = 'VisionClaudeServer'
 $AssetName     = 'vision-claude-server-windows-x64.tar.gz'
 $DataDir       = Join-Path $env:USERPROFILE '.vision-claude'
 $ServerDir     = Join-Path $DataDir 'server'
@@ -47,6 +48,12 @@ $ConfigPath    = Join-Path $DataDir 'config.json'
 # System32 bsdtar: a GNU tar from Git for Windows earlier on PATH treats "C:" as a remote host.
 $Tar           = Join-Path $env:SystemRoot 'System32\tar.exe'
 $ServerExe     = Join-Path $ServerDir 'VisionClaudeServer.exe'
+$SupExe        = Join-Path $SupervisorDir 'VisionClaudeServer.exe'
+$SupJs         = Join-Path $SupervisorDir 'supervisor.js'
+$Curl          = Join-Path $env:SystemRoot 'System32\curl.exe'
+$Conhost       = Join-Path $env:SystemRoot 'System32\conhost.exe'
+# Parallel connections for the release download, see Save-WithCurl.
+$DownloadParts = 8
 
 function Info($m) { Write-Host "==> $m" -ForegroundColor Cyan }
 function Ok($m)   { Write-Host "  [ok] $m" -ForegroundColor Green }
@@ -61,9 +68,6 @@ function Test-Admin {
 # Kill the supervisor first so it can't respawn the server, then anything still running from server\.
 # taskkill /T also takes down the claude processes the server started.
 function Stop-VisionClaude {
-  if (Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue) {
-    Stop-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
-  }
   foreach ($dir in @($SupervisorDir, $ServerDir)) {
     Get-Process -Name VisionClaudeServer -ErrorAction SilentlyContinue |
       Where-Object { $_.Path -and $_.Path.StartsWith($dir, [StringComparison]::OrdinalIgnoreCase) } |
@@ -78,8 +82,53 @@ function Stop-VisionClaude {
   Start-Sleep -Seconds 1
 }
 
-function Remove-FirewallRule {
-  Get-NetFirewallRule -DisplayName $FirewallRule -ErrorAction SilentlyContinue | Remove-NetFirewallRule
+# PowerShell single-quoted literal, for baking values into the elevated script below.
+function Quote($s) { "'" + ($s -replace "'", "''") + "'" }
+
+# Runs $script with administrator rights and reports whether it succeeded. Already elevated: runs
+# in place. Otherwise: one UAC prompt for a hidden child PowerShell. The child may belong to a
+# different (administrator) account, so $script must not rely on $env:USERPROFILE and friends;
+# callers bake every value in with Quote. -EncodedCommand sidesteps Start-Process's unquoted
+# argument joining in PS 5.1.
+function Invoke-Elevated($script) {
+  if (Test-Admin) {
+    try { $null = & ([scriptblock]::Create($script)); return $true } catch { Warn $_.Exception.Message; return $false }
+  }
+  $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes("`$ErrorActionPreference = 'Stop'`n" + $script))
+  try {
+    $p = Start-Process -FilePath 'powershell.exe' -Verb RunAs -Wait -PassThru -WindowStyle Hidden `
+      -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', $encoded)
+    return ($p.ExitCode -eq 0)
+  } catch {
+    return $false  # UAC declined
+  }
+}
+
+# Machine-wide leftovers of a v0.7.0 install *of this account* (task and rule pointing into this
+# profile). Other accounts' installs are left alone.
+function Get-LegacyCleanupScript {
+  $data = Quote $DataDir
+  @"
+`$data = $data
+`$task = Get-ScheduledTask -TaskName $(Quote $LegacyTask) -ErrorAction SilentlyContinue
+if (`$task -and (`$task.Actions | Where-Object { `$_.Arguments -and `$_.Arguments.IndexOf(`$data, [StringComparison]::OrdinalIgnoreCase) -ge 0 })) {
+  Unregister-ScheduledTask -TaskName $(Quote $LegacyTask) -Confirm:`$false
+}
+foreach (`$r in @(Get-NetFirewallRule -DisplayName $(Quote $LegacyRule) -ErrorAction SilentlyContinue)) {
+  `$program = (Get-NetFirewallApplicationFilter -AssociatedNetFirewallRule `$r).Program
+  if (`$program -and `$program.StartsWith(`$data, [StringComparison]::OrdinalIgnoreCase)) {
+    `$r | Remove-NetFirewallRule
+  }
+}
+Get-NetFirewallRule -DisplayName $(Quote $FirewallRule) -ErrorAction SilentlyContinue | Remove-NetFirewallRule
+"@
+}
+
+# Starts the hidden supervisor now; the Run value starts it at every logon of this account.
+# conhost --headless gives it (and everything it spawns) a console nobody can see.
+function Start-Supervisor {
+  Start-Process -FilePath $Conhost -WorkingDirectory $DataDir -WindowStyle Hidden `
+    -ArgumentList @('--headless', "`"$SupExe`"", "`"$SupJs`"")
 }
 
 # Remove-Item on a just-stopped process's directory can fail transiently while Windows releases
@@ -108,13 +157,16 @@ function Invoke-Uninstall {
       Warn "Could not remove the claude hooks automatically. Delete the __vision_claude_hook entries from %USERPROFILE%\.claude\settings.json yourself."
     }
   }
+  Remove-ItemProperty -Path $RunKey -Name $RunName -ErrorAction SilentlyContinue
   Stop-VisionClaude
-  Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
-  Remove-FirewallRule
+  Info 'Removing the firewall rule (administrator approval needed)'
+  if (-not (Invoke-Elevated (Get-LegacyCleanupScript))) {
+    Warn "Couldn't remove the firewall rule '$FirewallRule'. Remove it in Windows Defender Firewall yourself if you like; it's harmless without the program."
+  }
   foreach ($dir in @($ServerDir, $SupervisorDir, (Join-Path $DataDir 'server.new'), (Join-Path $DataDir 'server.old'))) {
     Remove-DirWithRetry $dir
   }
-  Ok 'Removed the logon task, firewall rule and program files'
+  Ok 'Removed autostart, firewall rule and program files'
   Write-Host "   Config and session data remain in $DataDir (delete that folder yourself if you want them gone too)"
 }
 
@@ -143,6 +195,100 @@ function Find-NativeClaude {
   return $null
 }
 
+# Pin "latest" to its tag once, so every range below comes from the same release even if a new one
+# is published mid-download. Falls back to the /latest/ URL if the lookup fails (Save-WithCurl then
+# reports why curl can't connect).
+function Resolve-ReleaseAssetUrl {
+  $latest = "https://github.com/$DistRepo/releases/latest/download/$AssetName"
+  if (-not (Test-Path $Curl)) { return $latest }
+  $resolved = & $Curl -sLIf --connect-timeout 30 -o NUL -w '%{url_effective}' "https://github.com/$DistRepo/releases/latest"
+  if ($LASTEXITCODE -eq 0 -and $resolved -match '/releases/tag/([^/?#]+)$') {
+    return "https://github.com/$DistRepo/releases/download/$($Matches[1])/$AssetName"
+  }
+  return $latest
+}
+
+# curl arguments shared by every download: follow GitHub's redirect to its CDN, fail on HTTP errors,
+# and abort a transfer that stalls below 1 KB/s for a minute so --retry can start it again.
+$CurlCommon = @('-L', '-f', '--retry', '5', '--retry-delay', '2', '--connect-timeout', '30', '-y', '60', '-Y', '1024')
+
+# GitHub's release CDN can throttle each connection to tens of KB/s, so even curl's single stream
+# took ~8 minutes for the ~33 MB asset. Instead: ask for byte 0 to learn the size, fetch
+# $DownloadParts ranges with parallel curl.exe processes while printing progress, then join them.
+# A server that ignores Range gets one curl with its own progress bar. Returns $false (after a
+# warning) when curl can't do it, so the caller can fall back to Invoke-WebRequest.
+function Save-WithCurl($url, $dest) {
+  $headers = & $Curl -sS @CurlCommon -r 0-0 -o NUL -D - $url
+  if ($LASTEXITCODE -ne 0) {
+    Warn "curl failed (exit code $LASTEXITCODE)"
+    return $false
+  }
+  $size = 0
+  $m = [regex]::Matches(($headers -join "`n"), '(?im)^content-range:\s*bytes\s+0-0/(\d+)')
+  if ($m.Count -gt 0) { $size = [long]$m[$m.Count - 1].Groups[1].Value }
+  if ($size -le 0) {
+    & $Curl @CurlCommon -# -o $dest $url
+    if ($LASTEXITCODE -ne 0) { Warn "curl failed (exit code $LASTEXITCODE)"; return $false }
+    return $true
+  }
+
+  $chunk = [long][math]::Ceiling($size / $DownloadParts)
+  $parts = @()
+  for ($start = [long]0; $start -lt $size; $start += $chunk) {
+    $end = [math]::Min($start + $chunk, $size) - 1
+    $parts += [pscustomobject]@{ Range = "$start-$end"; Length = $end - $start + 1; Path = "$dest.part$($parts.Count)"; Proc = $null }
+  }
+  $mb = { param($bytes) '{0:N1}' -f ($bytes / 1MB) }
+  try {
+    foreach ($p in $parts) {
+      $psi = New-Object Diagnostics.ProcessStartInfo $Curl
+      $psi.Arguments = (@('-s') + $CurlCommon + @('-r', $p.Range, '-o', "`"$($p.Path)`"", "`"$url`"")) -join ' '
+      $psi.UseShellExecute = $false
+      $psi.CreateNoWindow = $true
+      $p.Proc = [Diagnostics.Process]::Start($psi)
+    }
+    while (@($parts | Where-Object { -not $_.Proc.HasExited }).Count -gt 0) {
+      $got = [long]0
+      foreach ($p in $parts) { $f = New-Object IO.FileInfo $p.Path; if ($f.Exists) { $got += $f.Length } }
+      Write-Host -NoNewline ("`r    {0} / {1} MB ({2}%)   " -f (& $mb $got), (& $mb $size), [int](100 * $got / $size))
+      Start-Sleep -Milliseconds 500
+    }
+    Write-Host ("`r    {0} / {0} MB (100%)   " -f (& $mb $size))
+
+    # A range that still failed after curl's own retries gets one more try in the foreground,
+    # where curl's error message is visible.
+    foreach ($p in $parts) {
+      $ok = $p.Proc.ExitCode -eq 0 -and (Test-Path $p.Path) -and (Get-Item $p.Path).Length -eq $p.Length
+      if (-not $ok) {
+        & $Curl -sS @CurlCommon -r $p.Range -o $p.Path $url
+        if ($LASTEXITCODE -ne 0 -or (Get-Item $p.Path).Length -ne $p.Length) {
+          Warn "curl failed on bytes $($p.Range) (exit code $LASTEXITCODE)"
+          return $false
+        }
+      }
+    }
+
+    $out = [IO.File]::Create($dest)
+    try {
+      foreach ($p in $parts) {
+        $in = [IO.File]::OpenRead($p.Path)
+        try { $in.CopyTo($out) } finally { $in.Dispose() }
+      }
+    } finally { $out.Dispose() }
+  } finally {
+    # Ctrl+C or a failure above: don't leave curl processes writing into the temp folder.
+    foreach ($p in $parts) {
+      if ($p.Proc -and -not $p.Proc.HasExited) { try { $p.Proc.Kill() } catch { } }
+    }
+    foreach ($p in $parts) { Remove-Item $p.Path -Force -ErrorAction SilentlyContinue }
+  }
+  if ((Get-Item $dest).Length -ne $size) {
+    Warn "curl download is $((Get-Item $dest).Length) bytes, expected $size"
+    return $false
+  }
+  return $true
+}
+
 function Get-LanAddresses {
   Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
     Where-Object {
@@ -152,46 +298,24 @@ function Get-LanAddresses {
     Select-Object -ExpandProperty IPAddress
 }
 
-# Not elevated: relaunch in a new elevated window instead of making the user reopen PowerShell as
-# administrator. Under `irm | iex` there is no script file to relaunch, so the same installer is
-# fetched to a temp file first. The elevated process doesn't inherit this session's environment
-# (UAC goes through ShellExecute), so the VC_* overrides travel as parameters, and a relative
-# -Tarball is resolved now because the elevated window starts in System32.
-if (-not (Test-Admin)) {
-  $self = $PSCommandPath
-  if (-not $self) {
-    # Unpredictable name: a fixed one under a world-writable %TEMP% could be swapped out by
-    # another process between this download and Start-Process reading it back (TOCTOU).
-    $self = Join-Path ([IO.Path]::GetTempPath()) "vision-claude-install-$([guid]::NewGuid()).ps1"
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$DistRepo/main/install.ps1" -OutFile $self -UseBasicParsing
-  }
-  # Identify the invoking account by SID, not name: Windows PowerShell 5.1 joins -ArgumentList
-  # with spaces and no quoting, and a display name like "John Smith" would otherwise be split in
-  # two. A SID never contains spaces. The display name still travels (quoted) for the error
-  # message below, which is human-readable but not security-relevant.
-  $invokerSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
-  $argList = @(
-    '-NoProfile', '-ExecutionPolicy', 'Bypass', '-NoExit', '-File', "`"$self`"",
-    '-InvokedBySid', $invokerSid, '-InvokedByName', "`"$env:USERNAME`""
-  )
-  if ($Uninstall) { $argList += '-Uninstall' }
-  if ($Tarball) { $argList += @('-Tarball', "`"$((Resolve-Path $Tarball).Path)`"") }
-  if ($DistRepoOverride) { $argList += @('-DistRepoOverride', "`"$DistRepoOverride`"") }
-  Info 'Administrator rights are needed for the logon task and the firewall rule'
-  try {
-    Start-Process -FilePath 'powershell.exe' -Verb RunAs -ArgumentList $argList
-  } catch {
-    Die 'Administrator rights were declined. Rerun and click Yes on the prompt, or run the line in an Administrator PowerShell.'
-  }
-  Ok 'Continuing in the new administrator window; follow it there'
-  return
-}
+# 32-bit PowerShell on 64-bit Windows sees SysWOW64 in place of System32 (no conhost.exe there).
+if (-not [Environment]::Is64BitProcess) { Die 'Run this in the 64-bit Windows PowerShell (not "Windows PowerShell (x86)").' }
 
-# A standard account elevates by typing another (admin) account's password; the elevated window
-# then belongs to that account, and USERPROFILE / the logon task would point at the wrong user.
-# Compare by SID (stable, never has spaces) rather than by name.
-if ($InvokedBySid -and $InvokedBySid -ne [Security.Principal.WindowsIdentity]::GetCurrent().User.Value) {
-  Die "The administrator window runs as $env:USERNAME, not $InvokedByName, so it would install into the wrong profile. Make $InvokedByName an administrator (or sign in to Windows as one) and rerun."
+# An elevated window is the one way left to install into the wrong place: "Run as administrator"
+# with another account's password makes $env:USERPROFILE and HKCU that account's, and the server
+# would then only start when *that* account signs in. Compare with the owner of this desktop's
+# explorer.exe. Same account but elevated still works, but everything started from here (the
+# server and every claude it runs) keeps administrator rights until sign-out, so warn.
+if (Test-Admin) {
+  $session = (Get-Process -Id $PID).SessionId
+  $shell = Get-CimInstance Win32_Process -Filter "Name='explorer.exe' AND SessionId=$session" -ErrorAction SilentlyContinue |
+    Select-Object -First 1
+  $owner = if ($shell) { Invoke-CimMethod -InputObject $shell -MethodName GetOwnerSid -ErrorAction SilentlyContinue } else { $null }
+  $me = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+  if ($owner -and $owner.Sid -and $owner.Sid -ne $me) {
+    Die "This administrator window runs as $env:USERNAME, not the account signed in to this desktop, so it would install into the wrong profile. Run the line in a normal (non-administrator) PowerShell window instead; it asks for administrator approval only for the firewall rule."
+  }
+  Warn 'Running in an administrator window: until you sign out, the server (and Claude) run with administrator rights. A normal PowerShell window is recommended.'
 }
 
 if ($Uninstall) { Invoke-Uninstall; return }
@@ -257,9 +381,16 @@ try {
     Info "Using local archive $TarPath"
   } else {
     $TarPath = Join-Path $Tmp $AssetName
-    $Url = "https://github.com/$DistRepo/releases/latest/download/$AssetName"
+    $Url = Resolve-ReleaseAssetUrl
     Info "Downloading $AssetName"
-    Invoke-WebRequest -Uri $Url -OutFile $TarPath -UseBasicParsing
+    # curl.exe (built into Windows 10 1803+) shows progress and, in parallel ranges, is far faster
+    # than PS 5.1's Invoke-WebRequest, which on a ~35 MB file looks exactly like a hang.
+    if (-not ((Test-Path $Curl) -and (Save-WithCurl $Url $TarPath))) {
+      # e.g. curl exit 35 behind TLS-inspecting proxies (Schannel revocation check); the .NET stack
+      # usually copes, so fall back instead of failing outright.
+      if (Test-Path $Curl) { Warn 'Retrying with Invoke-WebRequest (no progress shown, may take a while)' }
+      Invoke-WebRequest -Uri $Url -OutFile $TarPath -UseBasicParsing
+    }
   }
   & $Tar -xzf $TarPath -C $Tmp
   if ($LASTEXITCODE -ne 0) { Die 'Failed to extract the archive; the download may be incomplete.' }
@@ -311,29 +442,30 @@ Remove-TypeData System.Array -ErrorAction SilentlyContinue
 [IO.File]::WriteAllText($ConfigPath, ($cfg | ConvertTo-Json -Depth 10), (New-Object Text.UTF8Encoding $false))
 Ok "Config: $ConfigPath"
 
-# -- Logon task --------------------------------------------------------------
-# conhost --headless gives the supervisor (and everything it spawns) a console nobody can see.
-$user = "$env:USERDOMAIN\$env:USERNAME"
-$supExe = Join-Path $SupervisorDir 'VisionClaudeServer.exe'
-$supJs = Join-Path $SupervisorDir 'supervisor.js'
-$action = New-ScheduledTaskAction -Execute 'conhost.exe' -Argument "--headless `"$supExe`" `"$supJs`"" -WorkingDirectory $DataDir
-$trigger = New-ScheduledTaskTrigger -AtLogOn -User $user
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
-  -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew
-$principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited
-Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force | Out-Null
-Start-ScheduledTask -TaskName $TaskName
-Ok "Registered logon task '$TaskName'"
-
 # -- Firewall ----------------------------------------------------------------
-Remove-FirewallRule
-New-NetFirewallRule -DisplayName $FirewallRule -Direction Inbound -Action Allow -Protocol TCP `
-  -LocalPort $Port -Program $ServerExe -Profile Private | Out-Null
-Ok "Firewall: TCP $Port open on Private networks"
+# Before the server starts, so Windows never pops its own "allow access" dialog for it.
+Info 'Opening the firewall for your Mac (administrator approval needed)'
+$firewallScript = (Get-LegacyCleanupScript) + @"
+
+New-NetFirewallRule -DisplayName $(Quote $FirewallRule) -Direction Inbound -Action Allow -Protocol TCP ``
+  -LocalPort $Port -Program $(Quote $ServerExe) -Profile Private | Out-Null
+"@
+if (Invoke-Elevated $firewallScript) {
+  Ok "Firewall: TCP $Port open on Private networks"
+} else {
+  Warn "Administrator approval didn't go through: the firewall rule wasn't created (your Mac can't reach this PC yet) and any logon task left by v0.7.0 wasn't removed. Rerun the installer and approve the prompt."
+}
 $public = Get-NetConnectionProfile -ErrorAction SilentlyContinue | Where-Object { $_.NetworkCategory -eq 'Public' }
 if ($public) {
   Warn "Network '$($public[0].Name)' is set to Public, so your Mac can't reach this PC. Switch it to Private in Settings > Network & internet."
 }
+
+# -- Autostart ---------------------------------------------------------------
+# A per-user Run value rather than a scheduled task: needs no administrator rights and always runs
+# in this account's own session, whichever account answered UAC above.
+Set-ItemProperty -Path $RunKey -Name $RunName -Value "`"$Conhost`" --headless `"$SupExe`" `"$SupJs`""
+Start-Supervisor
+Ok "Starts automatically when $env:USERNAME signs in"
 
 # -- Health check ------------------------------------------------------------
 Info "Waiting for the server on port $Port"
@@ -345,7 +477,18 @@ for ($i = 0; $i -lt 30; $i++) {
   } catch { }
   Start-Sleep -Seconds 1
 }
-if (-not $healthy) { Die "The server didn't come up within 30 seconds. Check $LogFile" }
+if (-not $healthy) {
+  if (Test-Path $LogFile) { Write-Host 'Last lines of the server log:'; Get-Content $LogFile -Tail 20 }
+  Die "The server didn't come up within 30 seconds. Check $LogFile"
+}
+# /health answering doesn't prove it's *this* install: another signed-in account's server (or
+# anything else) may hold the port, in which case ours can't listen and the Mac would pair with
+# the other one. Another account's process has no readable Path, which also counts as "not ours".
+$listener = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+$listenerPath = if ($listener) { (Get-Process -Id $listener.OwningProcess -ErrorAction SilentlyContinue).Path } else { $null }
+if (-not $listenerPath -or -not $listenerPath.StartsWith($ServerDir, [StringComparison]::OrdinalIgnoreCase)) {
+  Die "Port $Port is held by another program or by vision-claude of another signed-in Windows account. Sign that account out (or uninstall it there) and rerun."
+}
 Ok 'Server is running'
 
 Write-Host ''
