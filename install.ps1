@@ -50,6 +50,9 @@ $Tar           = Join-Path $env:SystemRoot 'System32\tar.exe'
 $ServerExe     = Join-Path $ServerDir 'VisionClaudeServer.exe'
 $TrayDir       = Join-Path $DataDir 'tray'
 $TrayExe       = Join-Path $TrayDir 'VisionClaudeTray.exe'
+# Not every account has a real Start Menu\Programs folder (e.g. some service/redirected profiles);
+# GetFolderPath can come back empty, so this is computed once here and checked before use below.
+$ProgramsDir   = [Environment]::GetFolderPath('Programs')
 $Curl          = Join-Path $env:SystemRoot 'System32\curl.exe'
 # Parallel connections for the release download, see Save-WithCurl.
 $DownloadParts = 8
@@ -183,6 +186,9 @@ function Invoke-Uninstall {
     }
   }
   Remove-ItemProperty -Path $RunKey -Name $RunName -ErrorAction SilentlyContinue
+  if ($ProgramsDir) {
+    Remove-Item -LiteralPath (Join-Path $ProgramsDir 'VisionClaude.lnk') -ErrorAction SilentlyContinue
+  }
   Stop-VisionClaude
   Info 'Removing the firewall rule (administrator approval needed)'
   if (-not (Invoke-Elevated (Get-LegacyCleanupScript))) {
@@ -193,6 +199,32 @@ function Invoke-Uninstall {
   }
   Ok 'Removed autostart, firewall rule and program files'
   Write-Host "   Config and session data remain in $DataDir (delete that folder yourself if you want them gone too)"
+}
+
+# Start menu shortcut so the tray app (and the window it can show) is reachable without remembering
+# this install lives under %USERPROFILE%\.vision-claude\tray. Recreated every install; a broken COM
+# call here shouldn't fail the whole install, just leave the shortcut missing.
+function New-StartMenuShortcut {
+  $shell = $null
+  $link = $null
+  try {
+    if (-not $ProgramsDir) { Warn "Couldn't find the Start menu Programs folder; skipping the shortcut."; return }
+    $lnkPath = Join-Path $ProgramsDir 'VisionClaude.lnk'
+    $shell = New-Object -ComObject WScript.Shell
+    $link = $shell.CreateShortcut($lnkPath)
+    $link.TargetPath = $TrayExe
+    $link.Arguments = ''
+    $link.WorkingDirectory = $TrayDir
+    $link.IconLocation = "$TrayExe,0"
+    $link.Description = 'VisionClaude server'
+    $link.Save()
+    Ok "Start menu shortcut: $lnkPath"
+  } catch {
+    Warn "Couldn't create the Start menu shortcut: $($_.Exception.Message)"
+  } finally {
+    if ($link) { [void][Runtime.InteropServices.Marshal]::ReleaseComObject($link) }
+    if ($shell) { [void][Runtime.InteropServices.Marshal]::ReleaseComObject($shell) }
+  }
 }
 
 # Default is yes: the user started an installer, so a bare Enter means "go ahead".
@@ -488,12 +520,17 @@ if ($public) {
   Warn "Network '$($public[0].Name)' is set to Public, so your Mac can't reach this PC. Switch it to Private in Settings > Network & internet."
 }
 
+# -- Start menu shortcut ------------------------------------------------------
+New-StartMenuShortcut
+
 # -- Autostart ---------------------------------------------------------------
 # A per-user Run value rather than a scheduled task: needs no administrator rights and always runs
 # in this account's own session, whichever account answered UAC above. It launches the tray app,
 # which starts the server (and lets the user stop / start it and copy the pairing link).
-Set-ItemProperty -Path $RunKey -Name $RunName -Value "`"$TrayExe`""
-Start-Process -FilePath $TrayExe -WorkingDirectory $TrayDir
+# --background: this is an unattended launch (login, or the installer itself below), not the user
+# opening the app, so it should start silently instead of popping the status window.
+Set-ItemProperty -Path $RunKey -Name $RunName -Value "`"$TrayExe`" --background"
+Start-Process -FilePath $TrayExe -WorkingDirectory $TrayDir -ArgumentList '--background'
 Ok "Starts automatically when $env:USERNAME signs in (VisionClaude icon in the system tray)"
 
 # -- Health check ------------------------------------------------------------
@@ -526,6 +563,7 @@ foreach ($ip in (Get-LanAddresses)) { Write-Host "   http://${ip}:$Port/pair" }
 Write-Host ''
 Write-Host "Logs: $LogFile"
 Write-Host 'The VisionClaude icon in the system tray can stop / start the server and copy the pairing link.'
+Write-Host 'Open it any time from the Start menu: VisionClaude.'
 if ($ClaudeInstalledNow) {
   Write-Host ''
   Write-Host 'Claude Code was just installed and still needs you to sign in: run `claude` in a new terminal,'

@@ -58,7 +58,7 @@ What it does:
 | **Server** | `%USERPROFILE%\.vision-claude\server` — started by the VisionClaude tray app whenever this Windows account signs in |
 | **Firewall** | Opens TCP 8790 for private networks. This is the only step that asks for administrator approval (one UAC prompt) |
 
-The **VisionClaude icon in the system tray** shows whether the server is running (green), starting (amber) or stopped (gray). Right-click it to start or stop the server, copy the pairing link / pair page URL / server URL / token, or open the logs; double-click it for a small status window. Quitting the tray app leaves the server running.
+The **VisionClaude icon in the system tray** shows whether the server is running (green), starting (amber) or stopped (gray). Right-click it to start or stop the server, copy the pairing link / pair page URL / server URL / token, or open the logs; double-click it for a small status window, which also lets you renew the token (all paired devices will need to pair again). It's also in the Start menu as **VisionClaude** — open it any time to bring up the status window, even while the tray app is already running. Quitting the tray app leaves the server running.
 
 - Everything is installed for the Windows account that runs the command. If several accounts should serve the Mac, run it once in each; only one of them can be signed in and serving at a time.
 - Your network must be set to **Private** (Settings → Network & internet), otherwise the Mac can't reach the PC.
@@ -87,7 +87,8 @@ Open it and click **Open in App**. The server address and token are handed over 
 - **Mac** — open the URL in a browser on this Mac. It launches the app you just installed.
 - **Vision Pro** — open the same page in the Vision Pro browser, replacing `127.0.0.1` with this Mac's LAN IP. Both devices must be on the same network.
 - **Windows server** — the Windows installer prints `http://<PC's LAN IP>:8790/pair`. Open it in a browser on the Mac, click **Yes** on the dialog that appears on the PC, then **Open in App**, or right-click the tray icon → **Copy pairing link** and paste it into a browser on the Mac.
-  For now the Mac app talks to one server at a time: pairing with the PC switches the app over to it, and pairing again with the Mac's own URL switches it back.
+
+Each machine running the server is paired separately by opening `http://<that machine's IP>:8790/pair` in a browser (or adding it manually in Settings → Servers). The app can stay connected to multiple servers at once — for example a Mac and a Windows PC — each showing up as its own group in the sidebar.
 
 Each device pairs once.
 
