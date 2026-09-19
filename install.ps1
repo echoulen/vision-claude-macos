@@ -48,26 +48,58 @@ $ConfigPath    = Join-Path $DataDir 'config.json'
 # System32 bsdtar: a GNU tar from Git for Windows earlier on PATH treats "C:" as a remote host.
 $Tar           = Join-Path $env:SystemRoot 'System32\tar.exe'
 $ServerExe     = Join-Path $ServerDir 'VisionClaudeServer.exe'
-$SupExe        = Join-Path $SupervisorDir 'VisionClaudeServer.exe'
-$SupJs         = Join-Path $SupervisorDir 'supervisor.js'
+$TrayDir       = Join-Path $DataDir 'tray'
+$TrayExe       = Join-Path $TrayDir 'VisionClaudeTray.exe'
 $Curl          = Join-Path $env:SystemRoot 'System32\curl.exe'
-$Conhost       = Join-Path $env:SystemRoot 'System32\conhost.exe'
 # Parallel connections for the release download, see Save-WithCurl.
 $DownloadParts = 8
 
 function Info($m) { Write-Host "==> $m" -ForegroundColor Cyan }
 function Ok($m)   { Write-Host "  [ok] $m" -ForegroundColor Green }
 function Warn($m) { Write-Host "  [!] $m" -ForegroundColor Yellow }
-function Die($m)  { throw "vision-claude install failed: $m" }
+function Die($m)  { Restore-QuickEdit; throw "vision-claude install failed: $m" }
+
+# The console's QuickEdit mode freezes all output the moment the user clicks inside the window
+# (it starts a text selection) until Enter/Esc is pressed, which looks exactly like the installer
+# hanging. Turn it off for the duration of the install and put the window back as it was at the
+# end (or on failure), since under `irm | iex` this is the user's own PowerShell window.
+$script:SavedConsoleMode = $null
+function Disable-QuickEdit {
+  try {
+    if (-not ('VisionClaude.VcConsole' -as [type])) {
+      Add-Type -Namespace VisionClaude -Name VcConsole -MemberDefinition @'
+[DllImport("kernel32.dll")] public static extern IntPtr GetStdHandle(int nStdHandle);
+[DllImport("kernel32.dll")] public static extern bool GetConsoleMode(IntPtr h, out uint mode);
+[DllImport("kernel32.dll")] public static extern bool SetConsoleMode(IntPtr h, uint mode);
+'@
+    }
+    $h = [VisionClaude.VcConsole]::GetStdHandle(-10)  # STD_INPUT_HANDLE
+    [uint32]$mode = 0
+    if (-not [VisionClaude.VcConsole]::GetConsoleMode($h, [ref]$mode)) { return }  # not a real console (ISE etc.)
+    $script:SavedConsoleMode = $mode
+    # ENABLE_EXTENDED_FLAGS (0x80) must be set for clearing ENABLE_QUICK_EDIT_MODE (0x40) to stick.
+    [void][VisionClaude.VcConsole]::SetConsoleMode($h, [uint32](($mode -bor 0x80) -band 0xFFFFFFBF))
+  } catch { }
+}
+function Restore-QuickEdit {
+  if ($null -eq $script:SavedConsoleMode) { return }
+  try { [void][VisionClaude.VcConsole]::SetConsoleMode([VisionClaude.VcConsole]::GetStdHandle(-10), $script:SavedConsoleMode) } catch { }
+  $script:SavedConsoleMode = $null
+}
 
 function Test-Admin {
   $id = [Security.Principal.WindowsIdentity]::GetCurrent()
   return ([Security.Principal.WindowsPrincipal]$id).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
-# Kill the supervisor first so it can't respawn the server, then anything still running from server\.
-# taskkill /T also takes down the claude processes the server started.
+# Kill the tray, then the supervisor so it can't respawn the server, then anything still running
+# from server\. taskkill /T also takes down the claude processes the server started.
 function Stop-VisionClaude {
+  # The tray first: it starts the supervisor when launched, and holds tray\ open.
+  Get-Process -Name VisionClaudeTray -ErrorAction SilentlyContinue |
+    Where-Object { $_.Path -and $_.Path.StartsWith($TrayDir, [StringComparison]::OrdinalIgnoreCase) } |
+    ForEach-Object { & cmd.exe /c "taskkill /F /PID $($_.Id) >nul 2>&1" }
+
   foreach ($dir in @($SupervisorDir, $ServerDir)) {
     Get-Process -Name VisionClaudeServer -ErrorAction SilentlyContinue |
       Where-Object { $_.Path -and $_.Path.StartsWith($dir, [StringComparison]::OrdinalIgnoreCase) } |
@@ -124,13 +156,6 @@ Get-NetFirewallRule -DisplayName $(Quote $FirewallRule) -ErrorAction SilentlyCon
 "@
 }
 
-# Starts the hidden supervisor now; the Run value starts it at every logon of this account.
-# conhost --headless gives it (and everything it spawns) a console nobody can see.
-function Start-Supervisor {
-  Start-Process -FilePath $Conhost -WorkingDirectory $DataDir -WindowStyle Hidden `
-    -ArgumentList @('--headless', "`"$SupExe`"", "`"$SupJs`"")
-}
-
 # Remove-Item on a just-stopped process's directory can fail transiently while Windows releases
 # file handles or Defender finishes scanning; retry instead of failing the whole install/uninstall.
 function Remove-DirWithRetry($path) {
@@ -163,7 +188,7 @@ function Invoke-Uninstall {
   if (-not (Invoke-Elevated (Get-LegacyCleanupScript))) {
     Warn "Couldn't remove the firewall rule '$FirewallRule'. Remove it in Windows Defender Firewall yourself if you like; it's harmless without the program."
   }
-  foreach ($dir in @($ServerDir, $SupervisorDir, (Join-Path $DataDir 'server.new'), (Join-Path $DataDir 'server.old'))) {
+  foreach ($dir in @($ServerDir, $SupervisorDir, $TrayDir, (Join-Path $DataDir 'server.new'), (Join-Path $DataDir 'server.old'))) {
     Remove-DirWithRetry $dir
   }
   Ok 'Removed autostart, firewall rule and program files'
@@ -305,7 +330,7 @@ if (-not [Environment]::Is64BitProcess) { Die 'Run this in the 64-bit Windows Po
 # with another account's password makes $env:USERPROFILE and HKCU that account's, and the server
 # would then only start when *that* account signs in. Compare with the owner of this desktop's
 # explorer.exe. Same account but elevated still works, but everything started from here (the
-# server and every claude it runs) keeps administrator rights until sign-out, so warn.
+# tray app, the server and every claude it runs) keeps administrator rights until sign-out, so warn.
 if (Test-Admin) {
   $session = (Get-Process -Id $PID).SessionId
   $shell = Get-CimInstance Win32_Process -Filter "Name='explorer.exe' AND SessionId=$session" -ErrorAction SilentlyContinue |
@@ -315,10 +340,11 @@ if (Test-Admin) {
   if ($owner -and $owner.Sid -and $owner.Sid -ne $me) {
     Die "This administrator window runs as $env:USERNAME, not the account signed in to this desktop, so it would install into the wrong profile. Run the line in a normal (non-administrator) PowerShell window instead; it asks for administrator approval only for the firewall rule."
   }
-  Warn 'Running in an administrator window: until you sign out, the server (and Claude) run with administrator rights. A normal PowerShell window is recommended.'
+  Warn 'Running in an administrator window: until you sign out, the tray app, the server and Claude run with administrator rights, and a later reinstall from a normal window may fail to replace them. A normal PowerShell window is recommended.'
 }
 
-if ($Uninstall) { Invoke-Uninstall; return }
+Disable-QuickEdit
+if ($Uninstall) { Invoke-Uninstall; Restore-QuickEdit; return }
 
 # -- Environment checks ------------------------------------------------------
 if (-not [Environment]::Is64BitOperatingSystem) { Die '64-bit Windows is required.' }
@@ -395,7 +421,7 @@ try {
   & $Tar -xzf $TarPath -C $Tmp
   if ($LASTEXITCODE -ne 0) { Die 'Failed to extract the archive; the download may be incomplete.' }
   $Staged = Join-Path $Tmp 'vision-claude-server'
-  foreach ($f in @('VisionClaudeServer.exe', 'VERSION', 'lib\server.js', 'lib\supervisor.js')) {
+  foreach ($f in @('VisionClaudeServer.exe', 'VERSION', 'lib\server.js', 'lib\supervisor.js', 'tray\VisionClaudeTray.exe')) {
     if (-not (Test-Path (Join-Path $Staged $f))) { Die "Release archive is missing $f." }
   }
 
@@ -403,13 +429,15 @@ try {
   Stop-VisionClaude
 
   New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
-  foreach ($dir in @($ServerDir, $SupervisorDir)) {
+  foreach ($dir in @($ServerDir, $SupervisorDir, $TrayDir)) {
     Remove-DirWithRetry $dir
   }
   Move-Item $Staged $ServerDir
   New-Item -ItemType Directory -Path $SupervisorDir | Out-Null
   Copy-Item $ServerExe $SupervisorDir
   Copy-Item (Join-Path $ServerDir 'lib\supervisor.js') $SupervisorDir
+  # The tray lives outside the versioned server\ dir so server self-updates leave it alone.
+  Move-Item (Join-Path $ServerDir 'tray') $TrayDir
   $Version = ([IO.File]::ReadAllText((Join-Path $ServerDir 'VERSION'))).Trim()
   Ok "Installed to $ServerDir (version $Version)"
 } finally {
@@ -462,10 +490,11 @@ if ($public) {
 
 # -- Autostart ---------------------------------------------------------------
 # A per-user Run value rather than a scheduled task: needs no administrator rights and always runs
-# in this account's own session, whichever account answered UAC above.
-Set-ItemProperty -Path $RunKey -Name $RunName -Value "`"$Conhost`" --headless `"$SupExe`" `"$SupJs`""
-Start-Supervisor
-Ok "Starts automatically when $env:USERNAME signs in"
+# in this account's own session, whichever account answered UAC above. It launches the tray app,
+# which starts the server (and lets the user stop / start it and copy the pairing link).
+Set-ItemProperty -Path $RunKey -Name $RunName -Value "`"$TrayExe`""
+Start-Process -FilePath $TrayExe -WorkingDirectory $TrayDir
+Ok "Starts automatically when $env:USERNAME signs in (VisionClaude icon in the system tray)"
 
 # -- Health check ------------------------------------------------------------
 Info "Waiting for the server on port $Port"
@@ -496,8 +525,11 @@ Write-Host 'Pair your Mac: open one of these in a browser on the Mac, then click
 foreach ($ip in (Get-LanAddresses)) { Write-Host "   http://${ip}:$Port/pair" }
 Write-Host ''
 Write-Host "Logs: $LogFile"
+Write-Host 'The VisionClaude icon in the system tray can stop / start the server and copy the pairing link.'
 if ($ClaudeInstalledNow) {
   Write-Host ''
   Write-Host 'Claude Code was just installed and still needs you to sign in: run `claude` in a new terminal,'
   Write-Host 'or use the Claude account section in the App settings after pairing.'
 }
+
+Restore-QuickEdit
