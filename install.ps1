@@ -471,6 +471,9 @@ try {
   # The tray lives outside the versioned server\ dir so server self-updates leave it alone.
   Move-Item (Join-Path $ServerDir 'tray') $TrayDir
   $Version = ([IO.File]::ReadAllText((Join-Path $ServerDir 'VERSION'))).Trim()
+  # The tray compares this with server\VERSION after a server self-update to decide whether it
+  # must replace itself with the tray bundled in the new server\tray (UTF-8 without BOM).
+  [IO.File]::WriteAllText((Join-Path $TrayDir 'VERSION'), $Version, (New-Object Text.UTF8Encoding $false))
   Ok "Installed to $ServerDir (version $Version)"
 } finally {
   Remove-Item -Recurse -Force $Tmp -ErrorAction SilentlyContinue
