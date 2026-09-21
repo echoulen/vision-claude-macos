@@ -2,7 +2,11 @@
 # vision-claude server 一鍵安裝／更新／解除安裝。
 #
 #   curl -fsSL https://raw.githubusercontent.com/echoulen/vision-claude-macos/main/install.sh | bash
+#   curl -fsSL .../install.sh | bash -s -- --server      只裝 server 與選單列小程式
+#   curl -fsSL .../install.sh | bash -s -- --app         只裝 macOS App
 #   curl -fsSL .../install.sh | bash -s -- --uninstall
+#
+# 沒有參數＝ --server 與 --app 兩者都裝（維持與舊指令相同的行為）。
 #
 # 做完這些事：下載發佈包 → 解壓到 ~/.vision-claude/server → 產生設定 → 註冊成登入自啟的
 # 常駐服務 → 等它真的起來 → 印出配對網址。使用者不需要 clone repo，也不需要先裝 node。
@@ -39,11 +43,24 @@ APP_TARBALL_NAME="VisionClaude-macos.tar.gz"
 # 指向本機 tarball 時跳過下載直接用它。理由同 VC_LABEL/VC_APP_DIR:要能在 dist repo
 # 還沒有 App asset 的情況下,把安裝流程完整跑到底驗證這支腳本本身。
 APP_TARBALL_LOCAL="${VC_APP_TARBALL:-}"
+# 選單列小程式（VisionClaude Server.app）：跟著 server 一起裝，由自己的 LaunchAgent 在登入時
+# 帶起來（只負責開 App，不是常駐服務，所以 KeepAlive 為 false）。label 可覆蓋的理由同 VC_LABEL。
+MENUBAR_LABEL="${VC_MENUBAR_LABEL:-io.echoulen.vision-claude-menubar}"
+MENUBAR_PLIST="$HOME/Library/LaunchAgents/$MENUBAR_LABEL.plist"
+MENUBAR_APP_NAME="VisionClaude Server.app"
+MENUBAR_APP_PATH="$APP_DIR/$MENUBAR_APP_NAME"
+
+# 安裝模式（--server／--app／兩者）。解析在下面的參數處理。
+MODE="all"
 
 info() { printf '\033[1;34m==>\033[0m %s\n' "$1"; }
 ok()   { printf '\033[1;32m ✓\033[0m %s\n' "$1"; }
 die()  { printf '\033[1;31m ✗\033[0m %s\n' "$1" >&2; exit 1; }
 warn() { printf '\033[1;33m ！\033[0m %s\n' "$1" >&2; }
+
+# plist 是 XML：路徑或 PATH 裡只要有一個 & 就會讓整份設定檔解析失敗，服務靜默載入不起來。
+# 定義放在這裡而不是寫 plist 的地方：server 與選單列小程式兩段都要用，而選單列那段比較早跑。
+xml_escape() { printf '%s' "$1" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
 
 # 「沒有人在聽」不是錯誤，是這個腳本最想看到的結果——但 lsof 對它回 exit 1，在
 # `set -e -o pipefail` 下會讓 `HOLDERS="$(port_in_use ... | tr ...)"` 這種賦值整個中止腳本。
@@ -183,12 +200,91 @@ install_app() {
   ok "Installed $APP_PATH"
 }
 
+# ── 選單列小程式 ─────────────────────────────────────────────────────────────
+# 發佈包裡的 menubar/VisionClaude Server.app 裝到 /Applications,並註冊一個登入自啟的
+# LaunchAgent(只是 `open -a`,不是常駐服務)。在 server 起來之後才做:小程式一啟動就會打
+# /health,先有 server 它第一眼看到的就是正確狀態。
+#
+# 失敗一律 warn + return 1(不是 die),理由同 install_app:server 這時已經在跑,結尾那段
+# 配對網址與指令對使用者仍然有用。
+install_menubar() {
+  local src="$INSTALL_DIR/menubar/$MENUBAR_APP_NAME"
+  # 舊版發佈包沒有這個目錄。這不是錯誤,只是那一版沒有小程式可裝。
+  [ -d "$src" ] || { warn "This release doesn't include the menu bar app; skipping it."; return 1; }
+
+  # 先把 LaunchAgent 收掉再結束行程,否則 launchd 會在我們換檔案的中途把它帶回來。
+  launchctl bootout "$DOMAIN/$MENUBAR_LABEL" 2>/dev/null || true
+  pkill -f "$MENUBAR_APP_NAME/Contents/MacOS" 2>/dev/null || true
+  sleep 1
+
+  # staging 與目的地同一個檔案系統(理由同 install_app 的那段),而且驗證要在替換之前做:
+  # 這裡失敗就完全不動已安裝的那份,使用者手上仍是能用的舊版。
+  local staging="$APP_DIR/.VisionClaudeServer.app.new"
+  # shellcheck disable=SC2064
+  trap "rm -rf '$staging'" RETURN
+
+  mkdir -p "$APP_DIR" || { warn "Failed to create $APP_DIR."; return 1; }
+  rm -rf "$staging" || { warn "Could not remove stale ${staging}, remove it manually and rerun."; return 1; }
+  # ditto 而不是 cp -R:保住 bundle 的簽章與擴充屬性。
+  ditto "$src" "$staging" || { warn "Failed to install the menu bar app to $APP_DIR."; return 1; }
+  xattr -cr "$staging" 2>/dev/null || true
+  codesign --verify --deep --strict "$staging" 2>/dev/null \
+    || { warn "Menu bar app signature verification failed, skipping it (the previous version is unaffected)."; return 1; }
+
+  rm -rf "$MENUBAR_APP_PATH" || { warn "Could not replace ${MENUBAR_APP_PATH}; remove it in Finder and rerun."; return 1; }
+  mv "$staging" "$MENUBAR_APP_PATH" || { warn "Failed to install ${MENUBAR_APP_PATH}."; return 1; }
+
+  local x_menubar_app; x_menubar_app="$(xml_escape "$MENUBAR_APP_PATH")"
+  mkdir -p "$HOME/Library/LaunchAgents"
+  cat > "$MENUBAR_PLIST" <<MENUBAR_PLIST_EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>$MENUBAR_LABEL</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/open</string>
+    <string>-a</string>
+    <string>$x_menubar_app</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <!-- open 開完 App 就結束,不是常駐行程:KeepAlive 會讓 launchd 不停地重跑它。 -->
+  <key>KeepAlive</key><false/>
+</dict>
+</plist>
+MENUBAR_PLIST_EOF
+
+  # 這三個失敗都不致命:小程式本身已經裝好了,使用者從 /Applications 點一下也能開。
+  launchctl bootstrap "$DOMAIN" "$MENUBAR_PLIST" 2>/dev/null || true
+  launchctl enable "$DOMAIN/$MENUBAR_LABEL" 2>/dev/null || true
+  launchctl kickstart -k "$DOMAIN/$MENUBAR_LABEL" 2>/dev/null || true
+
+  ok "Installed $MENUBAR_APP_PATH (menu bar app, starts at login)"
+}
+
+# 解除安裝時一起收掉:LaunchAgent 留著會在下次登入開一個連不到 server 的小程式。
+remove_menubar() {
+  launchctl bootout "$DOMAIN/$MENUBAR_LABEL" 2>/dev/null || true
+  rm -f "$MENUBAR_PLIST"
+  pkill -f "$MENUBAR_APP_NAME/Contents/MacOS" 2>/dev/null || true
+  if [ -d "$MENUBAR_APP_PATH" ]; then
+    rm -rf "$MENUBAR_APP_PATH" 2>/dev/null || true
+    if [ -e "$MENUBAR_APP_PATH" ]; then
+      warn "Could not remove ${MENUBAR_APP_PATH}. Drag it to the Trash in Finder."
+    else
+      ok "Removed $MENUBAR_APP_PATH"
+    fi
+  fi
+}
+
 uninstall() {
   info "Stopping and removing the service"
   stop_service
   rm -f "$PLIST"
   rm -rf "$INSTALL_DIR"
   ok "Removed $INSTALL_DIR and $PLIST"
+  remove_menubar
   # 安裝時一起裝,移除也要一起移除,否則會留下一個連不到 server 的殘骸。
   if [ -d "$APP_PATH" ]; then
     osascript -e 'quit app "VisionClaude"' 2>/dev/null || true
@@ -207,13 +303,42 @@ uninstall() {
   exit 0
 }
 
-[ "${1:-}" = "--uninstall" ] && uninstall
+case "${1:-}" in
+  --uninstall) uninstall ;;
+  --server) MODE="server" ;;
+  --app) MODE="app" ;;
+  "") MODE="all" ;;
+  *) die "Unknown option: $1
+     Usage: install.sh [--server | --app | --uninstall]   (no option installs both)" ;;
+esac
 
 # ── 環境檢查 ────────────────────────────────────────────────────────────────
 [ "$(uname -s)" = "Darwin" ] || die "This server only runs on macOS (detected $(uname -s))."
 
 ARCH="$(uname -m)"
 [ "$ARCH" = "arm64" ] || die "Only Apple Silicon (arm64) releases are available right now, this machine is ${ARCH}."
+
+# ── 只裝 App ────────────────────────────────────────────────────────────────
+# App 是純 client:它不跑 session,也不需要這台機器上有 claude CLI 或 server,所以這條路
+# 在環境檢查之後就直接分出去。這裡失敗就是整件事失敗(沒有別的東西裝成功),用 die 收場。
+if [ "$MODE" = "app" ]; then
+  install_app || die "The macOS App didn't install (see the warning above)."
+  cat <<APP_ONLY_EOF
+
+  The macOS App is installed at ${APP_PATH}.
+
+  Next: pair it with a server. Open that server's pairing page in this Mac's browser and
+  tap "Open in App" — the address and token are handed over automatically:
+
+      http://<server address>:8790/pair
+
+  Don't have a server yet? Install one:
+      on this Mac      curl -fsSL https://raw.githubusercontent.com/$DIST_REPO/main/install.sh | bash -s -- --server
+      on a Windows PC  irm https://raw.githubusercontent.com/$DIST_REPO/main/install.ps1 | iex
+
+APP_ONLY_EOF
+  exit 0
+fi
 
 # 這個腳本是在使用者自己的終端機裡跑的，PATH 就是他平常的 PATH——claude 找得到、
 # 等一下寫進 LaunchAgent 的快照也才是對的（launchd 自己完全不繼承登入 shell 的 PATH）。
@@ -291,8 +416,6 @@ PORT="$(read_configured_port "$NODE")"
 info "Registering the launch-at-login service"
 mkdir -p "$HOME/Library/LaunchAgents"
 
-# plist 是 XML：路徑或 PATH 裡只要有一個 & 就會讓整份設定檔解析失敗，服務靜默載入不起來。
-xml_escape() { printf '%s' "$1" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
 X_INSTALL_DIR="$(xml_escape "$INSTALL_DIR")"
 X_PATH="$(xml_escape "$PATH")"
 X_HOME="$(xml_escape "$HOME")"
@@ -356,25 +479,46 @@ info "Waiting for the server to respond"
 for _ in $(seq 1 40); do
   if curl -fsS --max-time 1 "http://127.0.0.1:$PORT/health" >/dev/null 2>&1; then
     ok "Server started (port ${PORT}, version ${VERSION})"
-    # App 沒裝成功不影響 server,結尾區塊照印:那裡的「重啟／看 log／移除」與配對網址
-    # 對只有 server 的使用者一樣有用,而以 die 收場只會讓人以為整件事都失敗了。
-    if install_app; then
-      APP_NOTE="  The server and macOS App are both ready. The App is installed at ${APP_PATH}."
+    # 小程式與 App 都是「沒裝成功也不影響 server」,結尾區塊照印:那裡的「重啟／看 log／移除」
+    # 與配對網址對只有 server 的使用者一樣有用,而以 die 收場只會讓人以為整件事都失敗了。
+    if install_menubar; then
+      MENUBAR_NOTE="  The menu bar app is running — the Vision Claude icon in the menu bar shows the
+  server status and can start/stop it, copy the pairing link and install updates."
     else
-      APP_NOTE="  The server is ready, but the macOS App failed to install (see the warning above).
-  The server itself is fully functional and Vision Pro can pair with it now; after
-  fixing the issue above, rerun this line to install the App."
+      MENUBAR_NOTE="  The menu bar app was not installed (see the warning above); the server itself is
+  fully functional without it."
+    fi
+    if [ "$MODE" = "all" ]; then
+      if install_app; then
+        APP_NOTE="  The macOS App is installed at ${APP_PATH}."
+      else
+        APP_NOTE="  The macOS App failed to install (see the warning above). After fixing the issue
+  above, install it on its own with:
+      curl -fsSL https://raw.githubusercontent.com/$DIST_REPO/main/install.sh | bash -s -- --app"
+      fi
+    else
+      APP_NOTE="  The macOS App was not installed (--server). To install it on this Mac:
+      curl -fsSL https://raw.githubusercontent.com/$DIST_REPO/main/install.sh | bash -s -- --app"
     fi
     cat <<DONE_EOF
+
+  The server is ready (port ${PORT}, version ${VERSION}).
+
+${MENUBAR_NOTE}
 
 ${APP_NOTE}
 
   Pairing (do this once each for Vision Pro and the macOS App): open the page below and
   tap "Open in App" — the server address and token will be passed into the App. Opening
-  it in this Mac's browser launches the macOS App you just installed; on Vision Pro,
-  open the same page in its browser, with the address replaced by this Mac's LAN IP:
+  it in this Mac's browser launches the macOS App; on Vision Pro, open the same page in
+  its browser, with the address replaced by this Mac's LAN IP:
 
       http://127.0.0.1:$PORT/pair
+
+  Install / update commands (each role has its own line):
+      Mac server + menu bar app   curl -fsSL https://raw.githubusercontent.com/$DIST_REPO/main/install.sh | bash -s -- --server
+      Mac / Vision Pro App        curl -fsSL https://raw.githubusercontent.com/$DIST_REPO/main/install.sh | bash -s -- --app
+      Windows server              irm https://raw.githubusercontent.com/$DIST_REPO/main/install.ps1 | iex
 
   Other commands:
       restart     launchctl kickstart -k $DOMAIN/$LABEL
