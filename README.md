@@ -25,7 +25,8 @@ machine should do — a Mac can be both a server and an app.
 Running `install.sh` with no options installs the server, the menu bar app and the Mac app
 on that Mac — that's the old one-line command, and it still works.
 
-Nothing to clone, no Node or Xcode required. Re-run the same line to update.
+Nothing to clone, no Node or Xcode required. Re-running the same line also updates, but
+you rarely need to — see [Updates](#updates).
 
 ### Mac server + menu bar app
 
@@ -46,13 +47,17 @@ actions as a menu. Quitting the menu bar app leaves the server running.
 
 Updates: the menu bar app checks on launch and every six hours, and installs them on
 request — it replaces the server and itself, then comes back. There's nothing to do in a
-terminal. The Mac app can also trigger the same update remotely (Settings → Servers).
+terminal. The Mac app can also update this server remotely (Settings → Servers), which
+updates the menu bar app along with it. If this Mac's server was installed before the menu
+bar app existed, the menu bar app is added automatically the first time the server starts
+after an update.
 
 Your settings, tokens and session history live in `~/.vision-claude/` and are never touched
 by an update.
 
 To uninstall (removes the server, the menu bar app and the Mac app, keeping
-`~/.vision-claude/`):
+`~/.vision-claude/`; a server installed later won't bring the menu bar app back on its own
+until you run the `--server` line again):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/echoulen/vision-claude-macos/main/install.sh | bash -s -- --uninstall
@@ -73,8 +78,9 @@ CLI on this machine — only a server to pair with.
 On **Vision Pro** the app comes from TestFlight; pair it with a server the same way (see
 below).
 
-Updates: when the app is paired with a server on the same Mac, Settings → Servers updates
-both the app and that server in one step. Otherwise re-run the line above.
+Updates: the app updates itself from Settings → App — it checks on launch and every six
+hours, and **Update & relaunch** installs the new version and reopens the app. Updating the
+app never touches your servers; each server is updated on its own (see [Updates](#updates)).
 
 ### Windows server
 
@@ -108,7 +114,8 @@ The **VisionClaude icon in the system tray** shows whether the server is running
 - If Claude Code was just installed, sign in once by running `claude` in a new terminal, or from the Claude account section of the Mac app's settings after pairing.
 
 Updates: the status window installs them, and the Mac app can trigger the same update
-remotely (Settings → Servers) — the tray app replaces itself afterwards either way.
+remotely (Settings → Servers, on that server) — the tray app replaces itself afterwards
+either way.
 Re-running the install line works too. Config and session history in
 `%USERPROFILE%\.vision-claude\` are kept.
 
@@ -117,6 +124,21 @@ To uninstall (in a normal PowerShell window):
 ```powershell
 & ([scriptblock]::Create((irm https://raw.githubusercontent.com/echoulen/vision-claude-macos/main/install.ps1))) -Uninstall
 ```
+
+## Updates
+
+The app and each server are updated separately — updating one never restarts the other.
+
+| What | Where to update it |
+|---|---|
+| Mac app | In the app: Settings → App → **Update & relaunch** |
+| Each server (Mac or Windows) | In the Mac app: Settings → Servers, on that server — or on that machine, from the menu bar app (Mac) or the tray app (Windows) |
+
+Updating a server also updates its companion app on that machine: the menu bar app on a
+Mac, the tray app on Windows. Macs that were set up before the menu bar app existed get it
+automatically after their next server update.
+
+The Vision Pro app updates through TestFlight.
 
 ## Getting started
 

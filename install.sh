@@ -49,6 +49,10 @@ MENUBAR_LABEL="${VC_MENUBAR_LABEL:-io.echoulen.vision-claude-menubar}"
 MENUBAR_PLIST="$HOME/Library/LaunchAgents/$MENUBAR_LABEL.plist"
 MENUBAR_APP_NAME="VisionClaude Server.app"
 MENUBAR_APP_PATH="$APP_DIR/$MENUBAR_APP_NAME"
+# 使用者用 --uninstall 移除過小程式的標記。server 啟動時會補裝缺少的小程式（見
+# server/src/update/menubarInstaller.ts），看到這個標記就不裝回來；重新跑 --server（或無參數）
+# 等於使用者又要它了，安裝時刪掉。放在資料目錄而不是程式目錄：uninstall 會刪掉後者。
+MENUBAR_DISABLED_MARKER="$DATA_DIR/menubar-disabled"
 
 # 安裝模式（--server／--app／兩者）。解析在下面的參數處理。
 MODE="all"
@@ -208,6 +212,8 @@ install_app() {
 # 失敗一律 warn + return 1(不是 die),理由同 install_app:server 這時已經在跑,結尾那段
 # 配對網址與指令對使用者仍然有用。
 install_menubar() {
+  # 放在最前面：就算這一版沒有小程式可裝，使用者既然重跑了 server 安裝，之後的版本也該補上。
+  rm -f "$MENUBAR_DISABLED_MARKER"
   local src="$INSTALL_DIR/menubar/$MENUBAR_APP_NAME"
   # 舊版發佈包沒有這個目錄。這不是錯誤,只是那一版沒有小程式可裝。
   [ -d "$src" ] || { warn "This release doesn't include the menu bar app; skipping it."; return 1; }
@@ -264,7 +270,9 @@ MENUBAR_PLIST_EOF
 }
 
 # 解除安裝時一起收掉:LaunchAgent 留著會在下次登入開一個連不到 server 的小程式。
+# 同時留下停用標記:使用者之後若只從 App 裝回 server,server 不會自作主張把小程式裝回來。
 remove_menubar() {
+  mkdir -p "$DATA_DIR" && : > "$MENUBAR_DISABLED_MARKER" || true
   launchctl bootout "$DOMAIN/$MENUBAR_LABEL" 2>/dev/null || true
   rm -f "$MENUBAR_PLIST"
   pkill -f "$MENUBAR_APP_NAME/Contents/MacOS" 2>/dev/null || true
