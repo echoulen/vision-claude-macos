@@ -493,9 +493,17 @@ if (Test-Path $ConfigPath) {
 } else {
   $defaultRoot = Join-Path $env:USERPROFILE 'work'
   $answer = Read-Host "Projects folder (where your Unreal projects live) [$defaultRoot]"
-  $projectsRoot = if ([string]::IsNullOrWhiteSpace($answer)) { $defaultRoot } else { $answer.Trim().Trim('"') }
-  if (-not (Test-Path $projectsRoot)) { Warn "$projectsRoot doesn't exist yet; create it or edit projectsRoot in $ConfigPath" }
-  $cfg = [pscustomobject]@{ claudeBin = $ClaudeBin; projectsRoot = $projectsRoot; bind = @('127.0.0.1', 'lan') }
+  $cfg = [pscustomobject]@{ claudeBin = $ClaudeBin; bind = @('127.0.0.1', 'lan') }
+  # Pressing Enter accepts the default, so leave projectsRoot out and let the server resolve it
+  # (%USERPROFILE%\work when it exists, otherwise the home folder). Writing the default here would
+  # mark the install as "configured" and the tray would never offer to set the folder up.
+  if (-not [string]::IsNullOrWhiteSpace($answer)) {
+    $projectsRoot = $answer.Trim().Trim('"')
+    if (-not (Test-Path $projectsRoot)) { Warn "$projectsRoot doesn't exist yet; create it or edit projectsRoot in $ConfigPath" }
+    $cfg | Add-Member -NotePropertyName projectsRoot -NotePropertyValue $projectsRoot
+  } elseif (-not (Test-Path $defaultRoot)) {
+    Info "No projects folder yet: open Vision Claude from the system tray and pick one with CHOOSE FOLDER."
+  }
 }
 $Port = if ($cfg.PSObject.Properties['port']) { [int]$cfg.port } else { 8790 }
 # PS 5.1 known issue: ConvertTo-Json can serialize arrays as {"value":[...],"Count":N} instead of
