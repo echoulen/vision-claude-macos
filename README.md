@@ -71,7 +71,7 @@ The app updates itself from **Settings → App**. Each server updates from the a
 <details>
 <summary>Requirements and uninstall</summary>
 
-**Requirements** — a Mac with Apple Silicon; the Claude Code CLI installed and logged in on whichever machine runs the server (the app alone doesn't need it). For a Windows server: Windows 10 1803+ / Windows 11, 64-bit, on a network set to **Private**; Git for Windows and Claude Code are installed for you if missing.
+**Requirements** — a Mac (Apple Silicon or Intel) on macOS 26 or later; the Claude Code CLI installed and logged in on whichever machine runs the server (the app alone doesn't need it). For a Windows server: Windows 10 1803+ / Windows 11, 64-bit, on a network set to **Private**; Git for Windows and Claude Code are installed for you if missing.
 
 **Uninstall on macOS** (removes the server, the menu bar app and the Mac app, keeping `~/.vision-claude/`):
 

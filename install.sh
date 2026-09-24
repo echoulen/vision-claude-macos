@@ -324,7 +324,15 @@ esac
 [ "$(uname -s)" = "Darwin" ] || die "This server only runs on macOS (detected $(uname -s))."
 
 ARCH="$(uname -m)"
-[ "$ARCH" = "arm64" ] || die "Only Apple Silicon (arm64) releases are available right now, this machine is ${ARCH}."
+# Apple Silicon 上從 Rosetta 開的終端機，uname -m 也會回 x86_64；照樣裝 arm64 版，
+# 不然 server 會整個跑在轉譯底下（能動但慢，之後自動更新也會一直抓 Intel 包）。
+if [ "$ARCH" = "x86_64" ] && [ "$(sysctl -n sysctl.proc_translated 2>/dev/null)" = "1" ]; then
+  ARCH="arm64"
+fi
+case "$ARCH" in
+  arm64|x86_64) ;;
+  *) die "Unsupported CPU architecture: ${ARCH} (expected arm64 or x86_64)." ;;
+esac
 
 # ── 只裝 App ────────────────────────────────────────────────────────────────
 # App 是純 client:它不跑 session,也不需要這台機器上有 claude CLI 或 server,所以這條路
