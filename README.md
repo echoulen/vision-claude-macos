@@ -35,32 +35,21 @@ Nothing to clone, no Node or Xcode required. On Vision Pro the app comes from Te
 </details>
 
 <details>
-<summary>Reaching a server from outside your network (ngrok + Google sign-in)</summary>
+<summary>Reaching a server from outside your network (Tailscale)</summary>
 
-The server only speaks plain HTTP on your LAN. To use it from elsewhere, put it behind an [ngrok](https://ngrok.com) tunnel **with Google sign-in restricted to your own email**. Never expose it without that gate: a server token lets whoever holds it run Claude Code on that machine.
+The server only speaks plain HTTP on your LAN. To use it from elsewhere, connect your devices with [Tailscale](https://tailscale.com) (the free Personal plan is enough) and publish the server to your tailnet only. Never expose it to the public internet: a server token lets whoever holds it run Claude Code on that machine.
 
-1. Save this as a traffic policy file, e.g. `~/.config/ngrok/vision-claude-policy.yml`, with your email in the allow list:
-
-   ```yaml
-   on_http_request:
-     - actions:
-         - type: oauth
-           config:
-             provider: google
-     - expressions:
-         - "!(actions.ngrok.oauth.identity.email in ['you@gmail.com'])"
-       actions:
-         - type: deny
-   ```
-
-2. Run the tunnel on the server machine, using your free static domain from the ngrok dashboard:
+1. Install Tailscale on the server machine (version 1.104.4 or later) and on each device you connect from, and sign in to the same account. On the server machine, turn on **Launch at login** so the connection comes back after a restart.
+2. Publish the server to your tailnet, on the server machine:
 
    ```bash
-   ngrok http 8790 --url https://<your-domain>.ngrok-free.app --traffic-policy-file ~/.config/ngrok/vision-claude-policy.yml
+   tailscale serve --bg 8790
    ```
 
-3. Pair through the tunnel: open `https://<your-domain>.ngrok-free.app/pair`, sign in with Google, and approve the request on the server machine (the dialog shows your real address, marked *via tunnel*).
-4. In the app the server shows **sign-in required** — click **Sign in** and pick the allowed Google account. The app remembers it; if you picked the wrong account, use **Switch account**.
+   If `tailscale` isn't on your PATH, use `/Applications/Tailscale.app/Contents/MacOS/Tailscale`. The first run may print a link to enable Serve for your tailnet (this also turns on HTTPS certificates); open it, then run the command again. The first request after that can time out while the certificate is issued, so retry it.
+
+   Do not use `tailscale funnel`, which makes it public. Certificate names are published in a public log, so avoid sensitive machine names.
+3. Pair through the tailnet: open `https://<machine>.<tailnet>.ts.net/pair` and approve the request on the server machine (the dialog shows your Tailscale address, marked *via tunnel*).
 
 </details>
 
