@@ -53,6 +53,19 @@ The server only speaks plain HTTP on your LAN. To use it from elsewhere, connect
 
 </details>
 
+<details>
+<summary>Using it from your iPhone</summary>
+
+After setting up Tailscale above, install Tailscale on your iPhone and, while you're next to your Mac:
+
+1. Open `https://<machine>.<tailnet>.ts.net` in Safari and add it to your Home Screen.
+2. Open it from the Home Screen icon and tap **Pair this phone**, then approve the request on your Mac.
+3. Set up Face ID and turn on notifications.
+
+You'll get a notification only when an agent is waiting on you.
+
+</details>
+
 ## Screenshots
 
 *Design renders from the UI mockup — this is what the app looks like.*
